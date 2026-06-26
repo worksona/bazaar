@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Modern Lock · №8 — The Two-Time Pad</title>
+<style>
+  :root{
+    --paper:#efe6d2;--paper2:#e7dabd;--panel:#f3ecda;--edge:#d9c8a1;
+    --ink:#241f17;--ink-soft:#5a5142;--ink-faint:#8a7d66;
+    --rule:#cdbc96;--rule-soft:#dccfab;
+    --brass:#946312;--brass-bright:#b3832a;--ox:#8a2a20;--teal:#256b62;--good:#3c7a37;
+    --display:"Hoefler Text","Iowan Old Style","Palatino Linotype",Palatino,"Book Antiqua",Georgia,serif;
+    --body:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,"Times New Roman",serif;
+    --mono:ui-monospace,"SF Mono",SFMono-Regular,Menlo,Monaco,Consolas,monospace;
+    --shadow:0 1px 0 rgba(255,253,245,.7) inset,0 14px 30px -22px rgba(40,30,10,.6);
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{margin:0;color:var(--ink);font-family:var(--body);line-height:1.62;font-size:17px;background:radial-gradient(120% 80% at 50% -10%,#f6efdd 0%,var(--paper) 55%,#e7dcc2 100%) fixed;}
+  body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:0;mix-blend-mode:multiply;opacity:.5;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.045'/%3E%3C/svg%3E");}
+  .wrap{position:relative;z-index:1;max-width:880px;margin:0 auto;padding:30px 22px 110px}
+  a{color:var(--teal)}
+  .back{font-family:var(--mono);font-size:12px;letter-spacing:.06em;text-transform:uppercase;text-decoration:none;color:var(--ink-faint)}
+  .back:hover{color:var(--brass)}
+  .kicker{font-family:var(--mono);font-size:11px;letter-spacing:.28em;text-transform:uppercase;color:var(--brass);margin:18px 0 8px}
+  header h1{font-family:var(--display);font-weight:600;font-size:clamp(30px,6vw,46px);line-height:1.05;margin:0 0 8px}
+  header h1 .no{color:var(--ox)}
+  .lede{font-size:18px;color:var(--ink-soft);font-style:italic;margin:0 0 14px;max-width:56ch}
+  .meta{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:6px}
+  .chip{font-family:var(--mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;border:1px solid var(--edge);background:var(--panel);border-radius:999px;padding:4px 12px;color:var(--ink-soft)}
+  .chip.grade{border-color:var(--brass);color:var(--brass)}.chip b{color:var(--ink)}
+  nav.path{position:sticky;top:0;z-index:5;margin:22px -22px 0;padding:10px 22px;background:linear-gradient(var(--paper),rgba(239,230,210,.86));backdrop-filter:blur(6px);border-bottom:1px solid var(--rule)}
+  nav.path ol{list-style:none;display:flex;gap:6px;margin:0;padding:0;flex-wrap:wrap;font-family:var(--mono);font-size:11.5px;letter-spacing:.04em;text-transform:uppercase}
+  nav.path a{display:flex;align-items:center;gap:8px;text-decoration:none;color:var(--ink-faint);padding:6px 11px;border-radius:8px;border:1px solid transparent}
+  nav.path a .n{width:19px;height:19px;border-radius:50%;border:1px solid var(--edge);display:grid;place-items:center;font-size:10px;color:var(--ink-soft)}
+  nav.path a:hover{color:var(--ink);background:#f7f0de}
+  nav.path a.active{color:var(--ox);border-color:var(--rule);background:#f7efdb}
+  nav.path a.active .n{border-color:var(--ox);background:var(--ox);color:#fbf3e3}
+  .step{position:relative;background:var(--panel);border:1px solid var(--edge);border-radius:14px;padding:26px 26px 24px;margin:26px 0;box-shadow:var(--shadow)}
+  .step::after{content:"";position:absolute;inset:6px;border:1px solid var(--rule-soft);border-radius:9px;pointer-events:none}
+  .step>*{position:relative}
+  .step-head{display:flex;align-items:baseline;gap:14px;margin:0 0 4px}
+  .medallion{flex:none;width:34px;height:34px;border-radius:50%;display:grid;place-items:center;font-family:var(--mono);font-size:14px;font-weight:700;color:#fbf3e3;background:var(--brass);box-shadow:0 0 0 3px #f3ecda,0 0 0 4px var(--brass)}
+  .step.teal .medallion{background:var(--teal);box-shadow:0 0 0 3px #f3ecda,0 0 0 4px var(--teal)}
+  .step.ox .medallion{background:var(--ox);box-shadow:0 0 0 3px #f3ecda,0 0 0 4px var(--ox)}
+  .step h2{font-family:var(--display);font-weight:600;font-size:25px;margin:0}
+  .tagline{color:var(--ink-soft);font-style:italic;margin:2px 0 18px;font-size:15.5px}
+  h3{font-family:var(--mono);font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--teal);margin:22px 0 8px}
+  .step.ox h3{color:var(--ox)}
+  p{margin:0 0 12px}
+  .dropcap::first-letter{float:left;font-family:var(--display);font-size:58px;line-height:.78;font-weight:600;padding:6px 10px 0 0;color:var(--ox)}
+  label{display:block;font-family:var(--mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-faint);margin:14px 0 5px}
+  textarea,input[type=text],select{width:100%;background:#fbf4e2;color:var(--ink);border:1px solid var(--edge);border-radius:9px;padding:11px 12px;font-family:var(--mono);font-size:14px;line-height:1.5}
+  textarea{min-height:54px;resize:vertical}
+  input:focus,textarea:focus,select:focus{outline:none;border-color:var(--brass);box-shadow:0 0 0 3px rgba(148,99,18,.14)}
+  .row{display:flex;gap:18px;flex-wrap:wrap}.row>div{flex:1;min-width:240px}
+  .controls{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin:14px 0 0}
+  .btn{font-family:var(--mono);font-size:12px;letter-spacing:.06em;font-weight:700;cursor:pointer;border-radius:9px;padding:10px 15px;border:1px solid transparent;transition:transform .06s,filter .15s}
+  .btn:active{transform:translateY(1px)}
+  .btn--brass{background:var(--brass);color:#fbf3e3}.btn--brass:hover{filter:brightness(1.08)}
+  .btn--ox{background:var(--ox);color:#fbf3e3}.btn--ox:hover{filter:brightness(1.08)}
+  .btn--teal{background:var(--teal);color:#fbf3e3}.btn--teal:hover{filter:brightness(1.08)}
+  .btn--ghost{background:transparent;border:1px solid var(--edge);color:var(--ink-soft)}.btn--ghost:hover{border-color:var(--brass);color:var(--brass)}
+  .seg{display:inline-flex;border:1px solid var(--edge);border-radius:9px;overflow:hidden;background:#fbf4e2}
+  .seg button{font-family:var(--mono);font-size:12px;letter-spacing:.06em;background:transparent;border:0;color:var(--ink-faint);padding:9px 16px;cursor:pointer}
+  .seg button.on{background:var(--teal);color:#fbf3e3;font-weight:700}
+  .hint{color:var(--ink-faint);font-size:13px;font-style:italic}.mono{font-family:var(--mono)}
+  .out{white-space:pre-wrap;word-break:break-word;background:#fbf4e2;border:1px solid var(--edge);border-radius:9px;padding:12px;font-family:var(--mono);font-size:13px;min-height:44px}
+  .callout{display:flex;gap:12px;align-items:flex-start;background:#fbf4e2;border:1px solid var(--edge);border-left:4px solid var(--teal);border-radius:9px;padding:13px 15px;margin-top:14px;font-size:15px}
+  .callout.ox{border-left-color:var(--ox)}
+  .callout .big{font-family:var(--display);font-size:30px;line-height:1;color:var(--teal);font-weight:700}.callout.ox .big{color:var(--ox)}
+  .intercepts{font-family:var(--mono);font-size:12px;background:#fbf4e2;border:1px solid var(--edge);border-radius:9px;padding:10px 12px;overflow:auto}
+  .intercepts .iline{white-space:pre;padding:2px 0;color:var(--ink-soft)}
+  .intercepts .lab{color:var(--ox);font-weight:700}
+  .cribhits{margin-top:10px;font-family:var(--mono);font-size:12.5px}
+  .cribhits .hit{padding:3px 6px;border-radius:6px;display:flex;gap:10px}
+  .cribhits .hit.eng{background:#eef2e0;color:var(--ink)}
+  .cribhits .hit .off{color:var(--ink-faint);min-width:52px}
+  .cribhits .hit .txt{white-space:pre}
+  .decstack{font-family:var(--mono);font-size:12.5px;background:#fbf4e2;border:1px solid var(--edge);border-radius:9px;padding:10px 12px;overflow:auto;margin-top:8px}
+  .decstack .dl{white-space:pre;padding:2px 0}
+  .decstack .dl .lab{color:var(--teal);font-weight:700}
+  .decstack .dl.flag{color:var(--ox);font-weight:700}
+  .seal{display:none;align-items:center;gap:14px;margin-top:14px;animation:pop .5s ease both}.seal.show{display:flex}
+  .seal .wax{width:62px;height:62px;flex:none;border-radius:50%;background:radial-gradient(circle at 38% 34%,#c0432f,var(--ox) 60%,#6e1f17);color:#f3d9c8;display:grid;place-items:center;font-family:var(--display);font-weight:700;font-size:13px;letter-spacing:.05em;box-shadow:0 6px 16px -8px rgba(110,31,23,.8),inset 0 2px 4px rgba(255,255,255,.25);transform:rotate(-7deg)}
+  .seal .msg b{font-family:var(--display);font-size:20px;color:var(--ox)}
+  @keyframes pop{0%{transform:scale(.7);opacity:0}60%{transform:scale(1.06)}100%{transform:scale(1);opacity:1}}
+  details{margin-top:14px;border-top:1px solid var(--rule-soft);padding-top:10px}
+  details summary{cursor:pointer;font-family:var(--mono);font-size:12px;letter-spacing:.06em;color:var(--teal);list-style:none}
+  details summary::-webkit-details-marker{display:none}
+  details summary::before{content:"▸ ";color:var(--brass)} details[open] summary::before{content:"▾ "}
+  footer{margin-top:40px;color:var(--ink-faint);font-size:12.5px;font-family:var(--mono);text-align:center;line-height:1.8}
+  .priv{display:inline-block;border:1px solid var(--edge);border-radius:999px;padding:4px 12px;margin-bottom:8px}
+  ::selection{background:rgba(138,42,32,.18)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <a class="back" href="../../">← back to The Bazaar</a>
+  <div class="kicker">The Bazaar · The Modern Lock · №8</div>
+  <header>
+    <h1>The <span class="no">Two-Time</span> Pad</h1>
+    <p class="lede">A cipher with <em>perfect</em> secrecy — provably unbreakable. Used once. The
+      lock here isn’t the maths; it’s the operator who used the same key twice.</p>
+    <div class="meta">
+      <span class="chip grade">difficulty · advanced</span>
+      <span class="chip">⏱ <b>25–35 min</b></span>
+      <span class="chip">you’ll learn <b>secure-vs-solvable + key reuse</b></span>
+    </div>
+  </header>
+
+  <nav class="path" aria-label="steps"><ol>
+    <li><a href="#s1"><span class="n">1</span> Learn</a></li>
+    <li><a href="#s2"><span class="n">2</span> Encrypt / Decrypt</a></li>
+    <li><a href="#s3"><span class="n">3</span> Analyze</a></li>
+    <li><a href="#s4"><span class="n">4</span> Crack the challenge</a></li>
+  </ol></nav>
+
+  <p class="hint" style="margin-top:18px">New here? The cipher itself can’t be broken — so don’t try.
+    Read top to bottom; the way in is a human mistake, and the tools below exploit it.</p>
+
+  <!-- STEP 1 -->
+  <section class="step" id="s1">
+    <div class="step-head"><span class="medallion">1</span><h2>Learn — perfect, until it isn’t</h2></div>
+    <p class="tagline">The one-time pad is the only cipher proven unbreakable — under one strict rule.</p>
+    <p class="dropcap"><b>A stream cipher</b> turns a key into a long river of random-looking bytes —
+      the <em>keystream</em> — and XORs it into your message. If that keystream is truly random, as
+      long as the message, and <em>never reused</em>, the result is a one-time pad: Shannon proved in
+      1949 that the ciphertext reveals <em>nothing</em>. No amount of computing breaks it. This is the
+      cabinet’s one genuinely secure lock.</p>
+    <h3>The catch — and the whole puzzle</h3>
+    <p>“Never reused” is doing all the work. XOR has a fatal symmetry: if two messages are encrypted
+      with the <em>same</em> keystream K, then
+      <span class="mono">C₁ ⊕ C₂ = (P₁ ⊕ K) ⊕ (P₂ ⊕ K) = P₁ ⊕ P₂</span> — the key cancels out
+      completely. You’re left with two English sentences XORed together, and that you <em>can</em>
+      tease apart. Worse: guess <em>one</em> message and you recover K outright, unlocking every other
+      message sent under it.</p>
+    <div class="callout ox"><span class="big">!</span><div><b>The lesson the whole field rests on:</b>
+      modern crypto isn’t usually broken by attacking the maths — it’s broken by <em>misuse</em>: a
+      reused key or nonce, bad randomness, a leaky implementation. The primitive is sound; the operator
+      isn’t. That’s the door you walk through here.</div></div>
+  </section>
+
+  <!-- STEP 2 -->
+  <section class="step teal" id="s2">
+    <div class="step-head"><span class="medallion">2</span><h2>Encrypt &amp; Decrypt — the stream</h2></div>
+    <p class="tagline">A key seeds the keystream; XOR hides the message. The same key brings it back.</p>
+    <div class="controls" style="margin-top:0">
+      <span class="seg" id="mode"><button data-mode="encode" class="on">encrypt →</button><button data-mode="decode">decrypt ←</button></span>
+      <span class="hint">encrypt gives hex; decrypt takes hex back to text</span>
+    </div>
+    <label for="key">key (seeds the keystream)</label>
+    <input id="key" type="text" value="harbor-light-7" autocomplete="off" spellcheck="false">
+    <div class="row">
+      <div><label for="inp" id="inlbl">message in</label><textarea id="inp" spellcheck="false">meet me on the quay at midnight</textarea></div>
+      <div><label for="outp" id="outlbl">ciphertext (hex)</label><div id="outp" class="out mono"></div></div>
+    </div>
+    <div class="callout"><span class="big">↻</span><div>Try it: encrypt, switch to <b>decrypt</b>,
+      paste the hex back with the <em>same</em> key — your message returns. Use a <em>different</em>
+      key and you get noise. So far, so secure. The danger is using one key on two messages.</div></div>
+  </section>
+
+  <!-- STEP 3 -->
+  <section class="step ox" id="s3">
+    <div class="step-head"><span class="medallion">3</span><h2>Analyze — crib-dragging</h2></div>
+    <p class="tagline">When two messages share a keystream, a guessed word drags the truth out.</p>
+    <p class="hint" style="font-style:normal">Pick two intercepts. Their XOR is <span class="mono">P₁ ⊕ P₂</span>.
+      Slide a likely word (a <b>crib</b>) along it: at each position, <span class="mono">crib ⊕ (C₁⊕C₂)</span>
+      shows what the <em>other</em> message says there. Where the result turns into readable English,
+      you’ve found where your crib really sits — and learned a slice of both messages.</p>
+    <div class="row">
+      <div><label for="cribA">intercept A</label><select id="cribA"></select></div>
+      <div><label for="cribB">intercept B</label><select id="cribB"></select></div>
+    </div>
+    <label for="crib">crib — a word you’d expect to appear</label>
+    <input id="crib" type="text" value="the " autocomplete="off" spellcheck="false">
+    <div class="controls" style="margin-top:6px"><button id="dragbtn" class="btn btn--ox">drag it →</button>
+      <span class="hint">readable hits are highlighted; try “ the ”, “quick”, “password”, “CABINET{”</span></div>
+    <div class="cribhits" id="cribhits"></div>
+  </section>
+
+  <!-- STEP 4 -->
+  <section class="step ox" id="s4">
+    <div class="step-head"><span class="medallion">4</span><h2>Crack the challenge</h2></div>
+    <p class="tagline">Five intercepts off the harbor wire — all sent under one lazy, reused keystream.</p>
+    <div class="intercepts" id="intercepts"></div>
+    <h3>recover the keystream from one known line</h3>
+    <p class="hint" style="font-style:normal">Crib-dragging will show you that one intercept is just a
+      <b>typing-practice line</b> the operator sent to test the wire — a sentence you’ll recognise the
+      moment you see a few words of it. Reconstruct that whole line, tell the tool which intercept it
+      is, and its keystream falls out — decrypting <em>all five</em> at once. One of them is the
+      password.</p>
+    <div class="row">
+      <div style="flex:0 0 200px"><label for="knownIdx">which intercept?</label><select id="knownIdx"></select></div>
+      <div><label for="known">the full plaintext of that line</label><input id="known" type="text" autocomplete="off" spellcheck="false" placeholder="type the line you recognised, exactly"></div>
+    </div>
+    <div class="decstack" id="decstack"></div>
+    <div class="verdict mono" id="verdict" style="margin-top:10px;font-size:14px;color:var(--ox)"></div>
+    <div class="seal" id="seal"><div class="wax">SOLVED</div><div class="msg"><b>The reused key gives way.</b><br><span class="hint" style="font-style:normal">№8 complete — you broke a “perfect” cipher without touching the maths, only the mistake.</span></div></div>
+    <details><summary>stuck? the typing-practice line (spoiler)</summary>
+      <p class="hint" style="margin:10px 0 0">Intercept&nbsp;1 decrypts to the pangram
+        <b class="mono" style="color:var(--ox)">the quick brown fox jumps over the lazy dog and the cat too.</b>
+        — crib-drag <span class="mono">quick brown</span> to confirm it, type that whole line
+        (exactly, with the closing full stop) into the box with intercept&nbsp;1 selected, and the
+        keystream recovers. The flag rides in the password line: <span class="mono">CABINET{…}</span>.</p></details>
+  </section>
+
+  <footer>
+    <span class="priv">🔒 runs entirely in your browser — nothing is sent anywhere</span><br>
+    The Bazaar · the modern lock · <a href="../../">back to the cabinet →</a>
+  </footer>
+</div>
+
+<script>
+const $=id=>document.getElementById(id);
+const CTHEX=["c048b9c8def6acab7ff66e466ff09824c7b50d59dd971661cc94c0121f6060de5adce4ed500ed24f9557b294f314e196609ffaeae6104e4ab697ee62","c645b18dc2e1a0ba34a2645120f58368c4fa1b1cc1870931cac7ca44157c258a59dcbdf24506ce0e9c18b3dbe05af1c17bd7f2aff6025b0da78ba16c","c04fb281c8ebb1e860be691463e6946dcfbf0159c7830862c8dbdd005a7b338a71f886c87f31ff149f5da3d1e025f7d36184fa95f1195f35b299e531","c048b9c8c7e2b7aa7ba42c5961f48261d3fa1e1cd2920831cbc3c044167724cd57cbb7a15054d90a9054f5d5fc1ea5d73493faa9ea081a05ac9da16c","c745b28c8ffaaabd66f67e5170eb8f24c0b61a17d0c20f79da94dc05177760db47d0a1f51117c41f815da794e61fe9d37385febaed514d03b09da16c"];
+const CTS=CTHEX.map(h=>{const a=[];for(let i=0;i<h.length;i+=2)a.push(parseInt(h.substr(i,2),16));return a;});
+const L=CTS[0].length;
+const FLAG_HASH="4d667ecde0bc50c8f62faf2e82302f417a4f2b7ca11f290a11aebc513ec88a86";
+const printable=c=>c===10||(c>=32&&c<127);
+const showable=c=>printable(c)?String.fromCharCode(c):"·";
+
+/* ---- engine: keystream from key via seeded xorshift ---- */
+function seedFrom(key){let h=2166136261>>>0;for(const ch of key){h^=ch.charCodeAt(0);h=Math.imul(h,16777619);}return h>>>0;}
+function keystream(key,n){let s=seedFrom(key)||1;const out=[];for(let i=0;i<n;i++){s^=s<<13;s>>>=0;s^=s>>17;s^=s<<5;s>>>=0;out.push(s&0xff);}return out;}
+const toHex=a=>a.map(b=>b.toString(16).padStart(2,"0")).join("");
+const fromHex=h=>{h=h.replace(/[^0-9a-fA-F]/g,"");const a=[];for(let i=0;i+1<h.length;i+=2)a.push(parseInt(h.substr(i,2),16));return a;};
+let mode="encode";
+$("mode").querySelectorAll("button").forEach(b=>b.onclick=()=>{mode=b.dataset.mode;$("mode").querySelectorAll("button").forEach(x=>x.classList.toggle("on",x===b));
+  $("inlbl").textContent=mode==="encode"?"message in":"ciphertext (hex) in";$("outlbl").textContent=mode==="encode"?"ciphertext (hex)":"message out";runEngine();});
+function runEngine(){
+  const key=$("key").value;
+  if(mode==="encode"){const bytes=[...$("inp").value].map(c=>c.charCodeAt(0)&0xff);const ks=keystream(key,bytes.length);$("outp").textContent=toHex(bytes.map((b,i)=>b^ks[i]));}
+  else{const bytes=fromHex($("inp").value);const ks=keystream(key,bytes.length);$("outp").textContent=bytes.map((b,i)=>showable(b^ks[i])).join("");}
+}
+$("inp").oninput=runEngine;$("key").oninput=runEngine;
+
+/* ---- intercepts list ---- */
+$("intercepts").innerHTML=CTHEX.map((h,i)=>`<div class="iline"><span class="lab">intercept ${i+1}</span>  ${h}</div>`).join("");
+[$("cribA"),$("cribB"),$("knownIdx")].forEach((sel,si)=>{sel.innerHTML=CTS.map((_,i)=>`<option value="${i}">intercept ${i+1}</option>`).join("");sel.value=si===1?1:0;});
+
+/* ---- crib drag ---- */
+function engScore(s){let n=0;for(const ch of s){if(/[a-zA-Z ]/.test(ch))n++;}return n/s.length;}
+$("dragbtn").onclick=()=>{
+  const a=+$("cribA").value,b=+$("cribB").value,crib=$("crib").value;
+  if(a===b){$("cribhits").innerHTML='<span class="hint">pick two different intercepts.</span>';return;}
+  if(!crib.length){$("cribhits").innerHTML='<span class="hint">type a crib first.</span>';return;}
+  const xab=CTS[a].map((x,i)=>x^CTS[b][i]);
+  const hits=[];
+  for(let o=0;o+crib.length<=L;o++){
+    let out="",ok=true;
+    for(let i=0;i<crib.length;i++){const v=xab[o+i]^crib.charCodeAt(i);if(!printable(v)){ok=false;break;}out+=String.fromCharCode(v);}
+    if(ok)hits.push({o,out,sc:engScore(out)});
+  }
+  hits.sort((x,y)=>y.sc-x.sc);
+  $("cribhits").innerHTML='<div class="hint" style="margin-bottom:6px">at each offset, this is what intercept '+(b+1)+' (or '+(a+1)+') reads where your crib sits — most-English first:</div>'+
+    hits.slice(0,8).map(h=>`<div class="hit ${h.sc>0.85?'eng':''}"><span class="off">@${h.o}</span><span class="txt">${h.out.replace(/</g,'&lt;')}</span></div>`).join("");
+};
+
+/* ---- keystream recovery + full decrypt ---- */
+async function sha256(s){const b=await crypto.subtle.digest("SHA-256",new TextEncoder().encode(s));return [...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,"0")).join("");}
+const norm=s=>s.toLowerCase().replace(/[^a-z0-9]/g,"");
+async function recover(){
+  const idx=+$("knownIdx").value, known=$("known").value;
+  const ks=new Array(L).fill(null);
+  for(let i=0;i<known.length&&i<L;i++)ks[i]=CTS[idx][i]^known.charCodeAt(i);
+  let flagFound=null;
+  const rows=CTS.map((ct,j)=>{
+    let line="";
+    for(let i=0;i<L;i++)line+= ks[i]==null?"·":showable(ct[i]^ks[i]);
+    const m=line.match(/CABINET\{[^}]*\}/);
+    if(m)flagFound=m[0];
+    return {j,line};
+  });
+  $("decstack").innerHTML=rows.map(r=>{
+    const isFlag=/CABINET\{[^}]*\}/.test(r.line);
+    return `<div class="dl ${isFlag?'flag':''}"><span class="lab">msg ${r.j+1}</span>  ${r.line.replace(/</g,'&lt;')}</div>`;
+  }).join("");
+  if(flagFound && (await sha256(norm(flagFound)))===FLAG_HASH){
+    $("verdict").textContent="✓ keystream recovered — the password line reads "+flagFound;
+    if(!$("seal").classList.contains("show")){$("seal").classList.add("show");$("seal").scrollIntoView({behavior:"smooth",block:"center"});}
+  } else { $("verdict").textContent=""; $("seal").classList.remove("show"); }
+}
+$("known").oninput=recover;$("knownIdx").onchange=recover;
+runEngine(); recover();
+
+/* scrollspy */
+(function(){const links=[...document.querySelectorAll('nav.path a')];const map={};links.forEach(a=>map[a.getAttribute('href').slice(1)]=a);
+  const obs=new IntersectionObserver(es=>{es.forEach(e=>{if(e.isIntersecting){links.forEach(l=>l.classList.remove('active'));map[e.target.id]&&map[e.target.id].classList.add('active');}});},{rootMargin:"-45% 0px -50% 0px"});
+  ["s1","s2","s3","s4"].forEach(id=>obs.observe($(id)));})();
+</script>
+</body>
+</html>

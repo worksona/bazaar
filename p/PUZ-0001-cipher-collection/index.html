@@ -1,0 +1,610 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Cabinet of Ciphers · №1 — Vigenère</title>
+<style>
+  :root{
+    /* antiquarian codebook palette */
+    --paper:#efe6d2; --paper2:#e7dabd; --panel:#f3ecda; --edge:#d9c8a1;
+    --ink:#241f17; --ink-soft:#5a5142; --ink-faint:#8a7d66;
+    --rule:#cdbc96; --rule-soft:#dccfab;
+    --brass:#946312; --brass-bright:#b3832a;
+    --ox:#8a2a20; --ox-bright:#a8392c;
+    --teal:#256b62; --teal-bright:#2f857a;
+    --good:#3c7a37;
+    --display:"Hoefler Text","Iowan Old Style","Palatino Linotype",Palatino,"Book Antiqua",Georgia,serif;
+    --body:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,"Times New Roman",serif;
+    --mono:ui-monospace,"SF Mono",SFMono-Regular,Menlo,Monaco,Consolas,monospace;
+    --shadow:0 1px 0 rgba(255,253,245,.7) inset, 0 14px 30px -22px rgba(40,30,10,.6);
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{
+    margin:0;color:var(--ink);font-family:var(--body);line-height:1.62;font-size:17px;
+    background:
+      radial-gradient(120% 80% at 50% -10%, #f6efdd 0%, var(--paper) 55%, #e7dcc2 100%) fixed;
+  }
+  /* faint paper grain over everything */
+  body::before{
+    content:"";position:fixed;inset:0;pointer-events:none;z-index:0;mix-blend-mode:multiply;opacity:.5;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.045'/%3E%3C/svg%3E");
+  }
+  .wrap{position:relative;z-index:1;max-width:900px;margin:0 auto;padding:30px 22px 110px}
+
+  a{color:var(--teal)}
+  .back{font-family:var(--mono);font-size:12px;letter-spacing:.06em;text-transform:uppercase;text-decoration:none;color:var(--ink-faint)}
+  .back:hover{color:var(--brass)}
+  .kicker{font-family:var(--mono);font-size:11px;letter-spacing:.28em;text-transform:uppercase;color:var(--brass);margin:18px 0 8px}
+
+  header h1{font-family:var(--display);font-weight:600;font-size:clamp(30px,6vw,46px);line-height:1.05;margin:0 0 8px;letter-spacing:.01em}
+  header h1 .no{color:var(--ox)}
+  .lede{font-size:18px;color:var(--ink-soft);font-style:italic;margin:0 0 14px;max-width:52ch}
+  .meta{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:6px}
+  .chip{font-family:var(--mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;
+    border:1px solid var(--edge);background:var(--panel);border-radius:999px;padding:4px 12px;color:var(--ink-soft)}
+  .chip.grade{border-color:var(--brass);color:var(--brass)}
+  .chip b{color:var(--ink)}
+
+  /* the double rule */
+  .rule{height:0;border:0;border-top:1px solid var(--rule);box-shadow:0 3px 0 -2px var(--rule);margin:30px 0}
+
+  /* step navigator */
+  nav.path{position:sticky;top:0;z-index:5;margin:22px -22px 0;padding:10px 22px;
+    background:linear-gradient(var(--paper),rgba(239,230,210,.86));backdrop-filter:blur(6px);
+    border-bottom:1px solid var(--rule)}
+  nav.path ol{list-style:none;display:flex;gap:6px;margin:0;padding:0;flex-wrap:wrap;
+    font-family:var(--mono);font-size:11.5px;letter-spacing:.04em;text-transform:uppercase}
+  nav.path a{display:flex;align-items:center;gap:8px;text-decoration:none;color:var(--ink-faint);
+    padding:6px 11px;border-radius:8px;border:1px solid transparent}
+  nav.path a .n{width:19px;height:19px;border-radius:50%;border:1px solid var(--edge);display:grid;place-items:center;font-size:10px;color:var(--ink-soft)}
+  nav.path a:hover{color:var(--ink);background:#f7f0de}
+  nav.path a.active{color:var(--ox);border-color:var(--rule);background:#f7efdb}
+  nav.path a.active .n{border-color:var(--ox);background:var(--ox);color:#fbf3e3}
+
+  /* step panels */
+  .step{position:relative;background:var(--panel);border:1px solid var(--edge);border-radius:14px;
+    padding:26px 26px 24px;margin:26px 0;box-shadow:var(--shadow)}
+  .step::after{content:"";position:absolute;inset:6px;border:1px solid var(--rule-soft);border-radius:9px;pointer-events:none}
+  .step>*{position:relative}
+  .step-head{display:flex;align-items:baseline;gap:14px;margin:0 0 4px}
+  .medallion{flex:none;width:34px;height:34px;border-radius:50%;display:grid;place-items:center;
+    font-family:var(--mono);font-size:14px;font-weight:700;color:#fbf3e3;background:var(--brass);
+    box-shadow:0 0 0 3px #f3ecda, 0 0 0 4px var(--brass)}
+  .step.teal .medallion{background:var(--teal);box-shadow:0 0 0 3px #f3ecda,0 0 0 4px var(--teal)}
+  .step.ox .medallion{background:var(--ox);box-shadow:0 0 0 3px #f3ecda,0 0 0 4px var(--ox)}
+  .step h2{font-family:var(--display);font-weight:600;font-size:25px;margin:0;letter-spacing:.01em}
+  .tagline{color:var(--ink-soft);font-style:italic;margin:2px 0 18px;font-size:15.5px}
+  h3{font-family:var(--mono);font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--teal);margin:22px 0 8px}
+  .step.ox h3{color:var(--ox)}
+  p{margin:0 0 12px}
+  .dropcap::first-letter{float:left;font-family:var(--display);font-size:58px;line-height:.78;font-weight:600;
+    padding:6px 10px 0 0;color:var(--ox)}
+
+  /* worked example strip */
+  .example{font-family:var(--mono);font-size:13px;background:#fbf4e2;border:1px solid var(--edge);
+    border-radius:10px;padding:14px 16px;overflow:auto;color:var(--ink-soft)}
+  .example b{color:var(--ink)}
+  .example .lab{color:var(--brass);display:inline-block;width:64px}
+  .example .ky{color:var(--ox)}
+  .example .ci{color:var(--teal)}
+
+  /* form controls */
+  label{display:block;font-family:var(--mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-faint);margin:14px 0 5px}
+  textarea,input[type=text]{width:100%;background:#fbf4e2;color:var(--ink);border:1px solid var(--edge);
+    border-radius:9px;padding:11px 12px;font-family:var(--mono);font-size:14px;line-height:1.5}
+  textarea{min-height:88px;resize:vertical}
+  input[type=text]:focus,textarea:focus{outline:none;border-color:var(--brass);box-shadow:0 0 0 3px rgba(148,99,18,.14)}
+  .row{display:flex;gap:18px;flex-wrap:wrap}
+  .row>div{flex:1;min-width:250px}
+  .controls{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin:14px 0 0}
+  .btn{font-family:var(--mono);font-size:12px;letter-spacing:.06em;font-weight:700;cursor:pointer;
+    border-radius:9px;padding:10px 15px;border:1px solid transparent;transition:transform .06s, filter .15s}
+  .btn:active{transform:translateY(1px)}
+  .btn--brass{background:var(--brass);color:#fbf3e3}
+  .btn--brass:hover{filter:brightness(1.08)}
+  .btn--ox{background:var(--ox);color:#fbf3e3}
+  .btn--ox:hover{filter:brightness(1.08)}
+  .btn--teal{background:var(--teal);color:#fbf3e3}
+  .btn--teal:hover{filter:brightness(1.08)}
+  .btn--ghost{background:transparent;border-color:var(--edge);color:var(--ink-soft)}
+  .btn--ghost:hover{border-color:var(--brass);color:var(--brass)}
+  .seg{display:inline-flex;border:1px solid var(--edge);border-radius:9px;overflow:hidden;background:#fbf4e2}
+  .seg button{font-family:var(--mono);font-size:12px;letter-spacing:.06em;background:transparent;border:0;
+    color:var(--ink-faint);padding:9px 16px;cursor:pointer}
+  .seg button.on{background:var(--teal);color:#fbf3e3;font-weight:700}
+  .hint{color:var(--ink-faint);font-size:13px;font-style:italic}
+  .mono{font-family:var(--mono)}
+
+  .out{white-space:pre-wrap;word-break:break-word;background:#fbf4e2;border:1px solid var(--edge);
+    border-radius:9px;padding:12px;font-family:var(--mono);font-size:14px;min-height:48px}
+  .trace{margin-top:12px;font-family:var(--mono);font-size:13px;line-height:1.9;overflow:auto;
+    background:#fbf4e2;border:1px dashed var(--edge);border-radius:9px;padding:10px 12px;white-space:pre;color:var(--ink-soft)}
+  .trace .l1 b{color:var(--ink)} .trace .l2 b{color:var(--ox)} .trace .l3 b{color:var(--teal)}
+
+  details{margin-top:14px;border-top:1px solid var(--rule-soft);padding-top:10px}
+  details summary{cursor:pointer;font-family:var(--mono);font-size:12px;letter-spacing:.06em;color:var(--teal);list-style:none}
+  details summary::-webkit-details-marker{display:none}
+  details summary::before{content:"▸ ";color:var(--brass)}
+  details[open] summary::before{content:"▾ "}
+
+  /* vigenere table */
+  .tbl{overflow:auto;border:1px solid var(--edge);border-radius:9px;margin-top:10px;max-height:340px}
+  table.vig{border-collapse:collapse;font-family:var(--mono);font-size:11px}
+  table.vig td,table.vig th{border:1px solid var(--rule-soft);width:20px;height:20px;text-align:center;color:var(--ink-faint)}
+  table.vig th{color:var(--teal);background:#f0e7cf;position:sticky;top:0}
+  table.vig td.rowh{background:#f0e7cf;color:var(--ox);font-weight:700;position:sticky;left:0}
+  table.vig td.hot{background:var(--brass);color:#fbf3e3;font-weight:700}
+
+  /* callout */
+  .callout{display:flex;gap:12px;align-items:flex-start;background:#fbf4e2;border:1px solid var(--edge);
+    border-left:4px solid var(--teal);border-radius:9px;padding:13px 15px;margin-top:14px;font-size:15px}
+  .callout.ox{border-left-color:var(--ox)}
+  .callout .big{font-family:var(--display);font-size:30px;line-height:1;color:var(--teal);font-weight:700}
+  .callout.ox .big{color:var(--ox)}
+
+  /* IC table */
+  .ictable{font-family:var(--mono);font-size:13px;width:100%;border-collapse:collapse;margin-top:12px}
+  .ictable td,.ictable th{border-bottom:1px solid var(--rule-soft);padding:6px 9px;text-align:left}
+  .ictable th{color:var(--ink-faint);font-weight:400;font-size:11px;letter-spacing:.08em;text-transform:uppercase}
+  .ictable .meter{display:inline-block;height:9px;border-radius:2px;background:var(--teal);opacity:.55;vertical-align:middle;margin-left:8px}
+  .ictable tr.best td{color:var(--ox);font-weight:700}
+  .ictable tr.best .meter{background:var(--ox);opacity:1}
+
+  /* column frequency cards */
+  .cols{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:14px;margin-top:14px}
+  .colcard{background:#fbf4e2;border:1px solid var(--edge);border-radius:10px;padding:10px 12px}
+  .colcard .ch{font-family:var(--mono);font-size:11px;color:var(--ink-faint);letter-spacing:.06em;text-transform:uppercase}
+  .colcard .pick{font-family:var(--display);font-size:34px;line-height:1;color:var(--ox);font-weight:700;margin:2px 0 6px}
+  .colcard .why{font-family:var(--mono);font-size:10.5px;color:var(--ink-faint);margin-bottom:8px}
+  .bars{display:flex;align-items:flex-end;gap:2px;height:70px}
+  .bar{flex:1;background:var(--teal);opacity:.5;border-radius:2px 2px 0 0;min-height:2px}
+  .bar.peak{opacity:1;background:var(--ox)}
+
+  .keyout{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-top:16px;
+    background:#f7efda;border:1px solid var(--brass);border-radius:10px;padding:14px 16px}
+  .keyout .lbl{font-family:var(--mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--brass)}
+  .keyout .val{font-family:var(--display);font-size:30px;font-weight:700;letter-spacing:.12em;color:var(--ox)}
+
+  /* challenge */
+  .quay{background:#fbf4e2;border:1px solid var(--edge);border-radius:10px;padding:16px;
+    font-family:var(--mono);font-size:13.5px;line-height:1.7;white-space:pre-wrap;word-break:break-word;color:var(--ink-soft);
+    position:relative;box-shadow:inset 0 0 40px -28px rgba(40,30,10,.8)}
+  ol.checklist{margin:6px 0 0;padding-left:0;list-style:none;counter-reset:c}
+  ol.checklist li{counter-increment:c;position:relative;padding:5px 0 5px 34px;font-size:15px}
+  ol.checklist li::before{content:counter(c);position:absolute;left:0;top:4px;width:22px;height:22px;border-radius:50%;
+    background:var(--brass);color:#fbf3e3;font-family:var(--mono);font-size:11px;display:grid;place-items:center}
+
+  .flagbox{display:flex;gap:10px;flex-wrap:wrap;align-items:stretch;margin-top:8px}
+  .flagbox input{flex:1;min-width:240px}
+  .verdict{margin-top:12px;font-family:var(--mono);font-size:14px;min-height:22px}
+  .verdict.ok{color:var(--good)} .verdict.no{color:var(--ox)}
+  .seal{display:none;align-items:center;gap:14px;margin-top:14px;animation:pop .5s ease both}
+  .seal.show{display:flex}
+  .seal .wax{width:62px;height:62px;flex:none;border-radius:50%;background:
+    radial-gradient(circle at 38% 34%, #c0432f, var(--ox) 60%, #6e1f17);color:#f3d9c8;
+    display:grid;place-items:center;font-family:var(--display);font-weight:700;font-size:13px;letter-spacing:.05em;
+    box-shadow:0 6px 16px -8px rgba(110,31,23,.8), inset 0 2px 4px rgba(255,255,255,.25);transform:rotate(-7deg)}
+  .seal .msg b{font-family:var(--display);font-size:20px;color:var(--ox)}
+  @keyframes pop{0%{transform:scale(.7);opacity:0}60%{transform:scale(1.06)}100%{transform:scale(1);opacity:1}}
+
+  footer{margin-top:40px;color:var(--ink-faint);font-size:12.5px;font-family:var(--mono);text-align:center;line-height:1.8}
+  .priv{display:inline-block;border:1px solid var(--edge);border-radius:999px;padding:4px 12px;margin-bottom:8px}
+  ::selection{background:rgba(138,42,32,.18)}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <a class="back" href="../../">← back to The Bazaar</a>
+  <div class="kicker">The Bazaar · Cabinet of Ciphers · №1</div>
+  <header>
+    <h1>The <span class="no">Vigenère</span> Cipher</h1>
+    <p class="lede">“The indecipherable cipher” — a 16th-century code that held for three
+      centuries. Learn it, wield it, then break one with no key in hand.</p>
+    <div class="meta">
+      <span class="chip grade">difficulty · intermediate</span>
+      <span class="chip">⏱ <b>20–30 min</b></span>
+      <span class="chip">you’ll learn <b>polyalphabetic ciphers + how they fall</b></span>
+    </div>
+  </header>
+
+  <nav class="path" aria-label="steps">
+    <ol>
+      <li><a href="#s1"><span class="n">1</span> Learn</a></li>
+      <li><a href="#s2"><span class="n">2</span> Encode / Decode</a></li>
+      <li><a href="#s3"><span class="n">3</span> Analyze</a></li>
+      <li><a href="#s4"><span class="n">4</span> Crack the challenge</a></li>
+    </ol>
+  </nav>
+
+  <p class="hint" style="margin-top:18px">New here? Just read top to bottom. Each numbered station
+    builds on the one before it, and the last one hands you a flag.</p>
+
+  <!-- STEP 1 ------------------------------------------------------------- -->
+  <section class="step" id="s1">
+    <div class="step-head"><span class="medallion">1</span><h2>Learn — what it is &amp; why it mattered</h2></div>
+    <p class="tagline">Two minutes of reading. Everything below uses these three ideas.</p>
+
+    <p class="dropcap"><b>A Vigenère cipher is just a stack of Caesar shifts.</b> You choose a
+      secret <em>keyword</em>. Write it under your message, repeating it, letter for letter. Each
+      message letter is pushed forward through the alphabet by the keyword letter beneath it
+      (A = no shift, B = +1, C = +2 …). Because the <em>same</em> plaintext letter is enciphered
+      differently depending on where it lands, the tell-tale letter frequencies that give away a
+      simple cipher get smeared away.</p>
+
+    <div class="example" aria-hidden="true">
+<span class="lab">plain</span><b>M E E T M E W H E R E</b>
+<span class="lab ky">keyword</span><span class="ky">L A N T E R N L A N T</span>
+<span class="lab ci">cipher</span><span class="ci">X E R M Q V J S E E X</span>
+    </div>
+
+    <h3>Why it was used</h3>
+    <p>Assembled by Bellaso in 1553 and later named for Blaise de Vigenère, it was reckoned
+      <em>unbreakable</em>. As late as 1917, <em>Scientific American</em> still called it
+      “impossible of translation.”</p>
+
+    <h3>The curious turn — how it falls</h3>
+    <p>The keyword <em>repeats</em>, and repetition leaves a rhythm. Charles Babbage and later
+      Friedrich Kasiski noticed that the cipher is really <em>n</em> ordinary Caesar ciphers
+      interleaved — one per keyword letter. Find <em>n</em> (the key length), split the message
+      into <em>n</em> columns, and each column is a plain Caesar shift you can read off by
+      frequency. That two-step attack is exactly what Station 3 lets you run by hand.</p>
+
+    <div class="callout">
+      <span class="big">“</span>
+      <div><b>Best use today:</b> share a keyword in person — a street you grew up on, a pet’s
+      name — and you can hide one line in a postcard that a passing reader sees as nonsense. The
+      keyword never travels with the message. That’s the whole trick.</div>
+    </div>
+  </section>
+
+  <!-- STEP 2 ------------------------------------------------------------- -->
+  <section class="step teal" id="s2">
+    <div class="step-head"><span class="medallion">2</span><h2>Encode &amp; Decode — the engine</h2></div>
+    <p class="tagline">Type a message and a keyword. Watch the alignment trace to see the shift happen.</p>
+
+    <div class="controls" style="margin-top:0">
+      <span class="seg" id="mode">
+        <button data-mode="encode" class="on">encode →</button>
+        <button data-mode="decode">decode ←</button>
+      </span>
+      <span class="hint">a 1-letter keyword is just a single Caesar shift — the warm-up</span>
+    </div>
+
+    <label for="key">keyword (the shared secret)</label>
+    <input id="key" type="text" value="LANTERN" autocomplete="off" spellcheck="false" placeholder="e.g. LANTERN">
+
+    <div class="row">
+      <div>
+        <label for="inp">message in</label>
+        <textarea id="inp" spellcheck="false">Meet me where the lamps are lit.</textarea>
+      </div>
+      <div>
+        <label for="outp">result out</label>
+        <div id="outp" class="out mono"></div>
+      </div>
+    </div>
+
+    <div class="trace" id="trace" aria-hidden="true"></div>
+
+    <div class="controls">
+      <button id="swap" class="btn btn--ghost">↺ use result as input</button>
+      <button id="share" class="btn btn--teal">copy share link</button>
+      <span id="shared" class="hint"></span>
+    </div>
+
+    <details>
+      <summary>open the Vigenère table (the row that does the shifting)</summary>
+      <p class="hint" style="margin:10px 0 0">Find your keyword letter down the left, your message
+        letter across the top — the cell where they meet is the cipher letter.</p>
+      <div class="tbl" id="tblwrap"></div>
+    </details>
+  </section>
+
+  <!-- STEP 3 ------------------------------------------------------------- -->
+  <section class="step ox" id="s3">
+    <div class="step-head"><span class="medallion">3</span><h2>Analyze — the attacker’s workbench</h2></div>
+    <p class="tagline">No keyword? Recover it from the ciphertext alone, in two moves.</p>
+
+    <label for="ct">ciphertext under attack</label>
+    <textarea id="ct" spellcheck="false" placeholder="paste a ciphertext here — or load the challenge from Station 4"></textarea>
+
+    <h3>Move A · find the key length</h3>
+    <p class="hint" style="font-style:normal">English letters clump together (lots of E, T, A; few
+      Z, Q). If we slice the text into the <em>right</em> number of columns, each column is plain
+      English in disguise and stays “clumpy.” The wrong number scrambles them flat. The
+      <em>index of coincidence</em> just measures that clumpiness — higher means more English-like.</p>
+    <div class="controls" style="margin-top:6px">
+      <button id="estimate" class="btn btn--ox">measure clumpiness →</button>
+    </div>
+    <div id="icverdict"></div>
+    <table class="ictable" id="ictable"></table>
+
+    <h3>Move B · recover the keyword, column by column</h3>
+    <p class="hint" style="font-style:normal">Each column is one Caesar shift. We try all 26
+      possible shifts and keep the one whose letters land closest to English’s natural fingerprint
+      (lots of E, T, A; almost no Q, Z). That best-fit shift <em>is</em> the keyword letter for
+      that column. The tall bar below is the column’s most common letter — usually a disguised E.</p>
+    <div class="controls" style="margin-top:6px">
+      <label for="klen" style="margin:0">key length</label>
+      <input id="klen" type="text" value="7" style="width:64px">
+      <button id="freq" class="btn btn--ox">read the columns →</button>
+    </div>
+    <div id="freqwrap"></div>
+    <div class="keyout" id="keyout" style="display:none">
+      <span class="lbl">recovered keyword</span>
+      <span class="val" id="recovered">—</span>
+      <button id="usekey" class="btn btn--brass">decode with this keyword →</button>
+      <span class="hint" id="usehint"></span>
+    </div>
+    <p class="hint" style="margin-top:10px">Frequency analysis points the way but isn’t always
+      perfect on short text — if a column’s pick looks off, nudge that letter by hand in the
+      keyword box at Station 2 until the decode reads as English.</p>
+  </section>
+
+  <!-- STEP 4 ------------------------------------------------------------- -->
+  <section class="step ox" id="s4">
+    <div class="step-head"><span class="medallion">4</span><h2>Crack the challenge</h2></div>
+    <p class="tagline">A lamplighter left this on the quay. No key was given — but the rows remember.</p>
+
+    <div class="quay" id="challenge"></div>
+
+    <div class="controls">
+      <button id="loadchal" class="btn btn--ox">load it into the workbench →</button>
+      <span class="hint">sends this text up to Station 3 and measures it for you</span>
+    </div>
+
+    <h3>How to crack it</h3>
+    <ol class="checklist">
+      <li><b>Load</b> the message into the workbench (button above).</li>
+      <li>Run <b>Move A</b> to find the key length, then <b>Move B</b> to recover the keyword.</li>
+      <li>Hit <b>“decode with this keyword”</b> — the plaintext appears at Station 2.</li>
+      <li>Read to the end. The message closes with a flag shaped like
+        <span class="mono">CABINET{…}</span>. Paste it below.</li>
+    </ol>
+
+    <label for="flag">enter the flag</label>
+    <div class="flagbox">
+      <input id="flag" type="text" autocomplete="off" spellcheck="false" placeholder="CABINET{...}">
+      <button id="checkflag" class="btn btn--ox">seal it ✓</button>
+    </div>
+    <div class="verdict" id="verdict"></div>
+    <div class="seal" id="seal">
+      <div class="wax">SOLVED</div>
+      <div class="msg"><b>The cabinet opens.</b><br>
+        <span class="hint" style="font-style:normal">№1 complete — you broke a cipher that held for 300 years.</span></div>
+    </div>
+
+    <details>
+      <summary>stuck? reveal the keyword (spoiler)</summary>
+      <p class="hint" style="margin:10px 0 0">The keyword is <b class="mono" style="color:var(--ox)">LANTERN</b>.
+        Type it at Station 2, switch to <b>decode</b>, and paste the challenge text as the message.</p>
+    </details>
+  </section>
+
+  <footer>
+    <span class="priv">🔒 runs entirely in your browser — nothing is sent anywhere</span><br>
+    The Cabinet of Ciphers · a graded collection · <a href="../PUZ-0003-transposition/">next: №3 Transposition →</a>
+  </footer>
+</div>
+
+<script>
+const A=65;
+const onlyAZ=s=>s.toUpperCase().replace(/[^A-Z]/g,"");
+const $=id=>document.getElementById(id);
+function vig(text,key,decode){
+  key=onlyAZ(key); if(!key) return text;
+  let j=0,out="";
+  for(const ch of text){
+    const c=ch.charCodeAt(0);
+    const isU=ch>="A"&&ch<="Z", isL=ch>="a"&&ch<="z";
+    if(isU||isL){
+      const base=isU?65:97;
+      let k=key.charCodeAt(j%key.length)-A;
+      if(decode)k=(26-k)%26;
+      out+=String.fromCharCode((c-base+k)%26+base);
+      j++;
+    } else out+=ch;
+  }
+  return out;
+}
+
+/* ---- engine + alignment trace ---- */
+let mode="encode";
+$("mode").querySelectorAll("button").forEach(b=>b.onclick=()=>{
+  mode=b.dataset.mode;
+  $("mode").querySelectorAll("button").forEach(x=>x.classList.toggle("on",x===b));
+  run();
+});
+function run(){
+  const key=$("key").value, text=$("inp").value, dec=mode==="decode";
+  const res=vig(text,key,dec);
+  $("outp").textContent=res;
+  renderTrace(text,res,key,dec);
+}
+function renderTrace(text,res,key,dec){
+  const K=onlyAZ(key);
+  if(!K){ $("trace").innerHTML=""; return; }
+  const inL=[],kyL=[],outL=[]; let j=0;
+  for(let i=0;i<text.length && inL.length<34;i++){
+    const ch=text[i];
+    if(/[a-z]/i.test(ch)){
+      inL.push(ch.toUpperCase());
+      kyL.push(K[j%K.length]);
+      outL.push(res[i].toUpperCase());
+      j++;
+    }
+  }
+  if(!inL.length){ $("trace").innerHTML=""; return; }
+  const more=onlyAZ(text).length>inL.length?" …":"";
+  const lblIn = dec?"cipher ":"plain  ";
+  const lblOut= dec?"plain  ":"cipher ";
+  $("trace").innerHTML=
+    `<div class="l1">${lblIn}<b>${inL.join(" ")}</b>${more}</div>`+
+    `<div class="l2">key    <b>${kyL.join(" ")}</b>${more}</div>`+
+    `<div class="l3">${lblOut}<b>${outL.join(" ")}</b>${more}</div>`;
+}
+$("inp").oninput=run; $("key").oninput=run;
+$("swap").onclick=()=>{ $("inp").value=$("outp").textContent; run(); };
+$("share").onclick=()=>{
+  const payload={m:mode,k:$("key").value,t:$("inp").value};
+  const hash="#c="+btoa(unescape(encodeURIComponent(JSON.stringify(payload))));
+  navigator.clipboard&&navigator.clipboard.writeText(location.origin+location.pathname+hash);
+  history.replaceState(null,"",hash);
+  $("shared").textContent="link copied — the keyword is NOT in it";
+  setTimeout(()=>$("shared").textContent="",4000);
+};
+
+/* ---- vigenere table ---- */
+(function(){
+  let h="<table class='vig'><tr><th></th>";
+  for(let c=0;c<26;c++)h+="<th>"+String.fromCharCode(A+c)+"</th>";
+  h+="</tr>";
+  for(let r=0;r<26;r++){
+    h+="<tr><td class='rowh'>"+String.fromCharCode(A+r)+"</td>";
+    for(let c=0;c<26;c++)h+="<td>"+String.fromCharCode(A+(r+c)%26)+"</td>";
+    h+="</tr>";
+  }
+  h+="</table>"; $("tblwrap").innerHTML=h;
+})();
+
+/* ---- attacker: index of coincidence ---- */
+function ic(s){
+  s=onlyAZ(s); const n=s.length; if(n<2)return 0;
+  const f=new Array(26).fill(0); for(const ch of s)f[ch.charCodeAt(0)-A]++;
+  let sum=0; for(const x of f)sum+=x*(x-1);
+  return sum/(n*(n-1));
+}
+function avgICForLen(s,L){
+  s=onlyAZ(s); let tot=0;
+  for(let i=0;i<L;i++){ let col=""; for(let j=i;j<s.length;j+=L)col+=s[j]; tot+=ic(col); }
+  return tot/L;
+}
+$("estimate").onclick=()=>{
+  const s=onlyAZ($("ct").value);
+  if(s.length<24){ $("icverdict").innerHTML=""; $("ictable").innerHTML="<tr><td>paste a longer ciphertext first (or load the challenge)</td></tr>"; return; }
+  const vals=[]; let best=1,bestv=0,maxv=0;
+  for(let L=1;L<=12;L++){ const v=avgICForLen(s,L); vals.push([L,v]); if(v>bestv){bestv=v;best=L;} if(v>maxv)maxv=v; }
+  let rows="<tr><th>key length</th><th>clumpiness (index of coincidence)</th></tr>";
+  for(const [L,v] of vals){
+    const w=Math.round(v/maxv*150);
+    rows+=`<tr class="${L===best?'best':''}"><td>${L}</td><td>${v.toFixed(4)}<span class="meter" style="width:${w}px"></span>${L===best?' ← most English-like':''}</td></tr>`;
+  }
+  $("ictable").innerHTML=rows;
+  $("klen").value=best;
+  $("icverdict").innerHTML=
+    `<div class="callout ox"><span class="big">${best}</span><div><b>Likely key length: ${best} letters.</b>
+     Column count <b>${best}</b> stays clumpiest — close to English’s 0.067. Now run Move B with this number.</div></div>`;
+};
+
+/* ---- attacker: recover keyword from columns ----
+   For each column try all 26 shifts and keep the one whose deciphered letters
+   correlate best with English frequencies. This is far more robust on short
+   columns than the naive "most-common-letter = E" shortcut. */
+const EN=[8.2,1.5,2.8,4.3,12.7,2.2,2.0,6.1,7.0,0.15,0.77,4.0,2.4,6.7,7.5,1.9,0.095,6.0,6.3,9.1,2.8,0.98,2.4,0.15,2.0,0.074];
+$("freq").onclick=()=>{
+  const s=onlyAZ($("ct").value); const L=Math.max(1,parseInt($("klen").value)||1);
+  if(s.length<L*2){ $("freqwrap").innerHTML="<p class='hint'>need more ciphertext for that key length.</p>"; return; }
+  let cards="", recovered="";
+  for(let i=0;i<L;i++){
+    let col=""; for(let j=i;j<s.length;j+=L)col+=s[j];
+    const f=new Array(26).fill(0); for(const ch of col)f[ch.charCodeAt(0)-A]++;
+    const max=Math.max(1,...f);
+    let mi=0; for(let c=1;c<26;c++) if(f[c]>f[mi]) mi=c;          // tallest bar (display)
+    let bestK=0,bestScore=-1e9;                                   // best-fit shift (the answer)
+    for(let k=0;k<26;k++){
+      let score=0; for(let c=0;c<26;c++){ const p=((c-k)%26+26)%26; score+=f[c]*EN[p]; }
+      if(score>bestScore){ bestScore=score; bestK=k; }
+    }
+    const guess=String.fromCharCode(A+bestK);
+    recovered+=guess;
+    let bars="";
+    for(let c=0;c<26;c++){
+      const ht=Math.max(2,Math.round(f[c]/max*100));
+      bars+=`<div class="bar ${c===mi?'peak':''}" style="height:${ht}%" title="${String.fromCharCode(A+c)}"></div>`;
+    }
+    cards+=`<div class="colcard"><div class="ch">column ${i+1} · peak ${String.fromCharCode(A+mi)}</div>
+      <div class="pick">${guess}</div>
+      <div class="why">best fit to English → key ${guess}</div>
+      <div class="bars">${bars}</div></div>`;
+  }
+  $("freqwrap").innerHTML=`<div class="cols">${cards}</div>`;
+  $("recovered").textContent=recovered;
+  $("keyout").style.display="flex";
+  $("usehint").textContent="";
+};
+$("usekey").onclick=()=>{
+  const k=$("recovered").textContent.trim();
+  if(!k||k==="—")return;
+  $("key").value=k;
+  $("inp").value=$("ct").value;
+  mode="decode";
+  $("mode").querySelectorAll("button").forEach(x=>x.classList.toggle("on",x.dataset.mode==="decode"));
+  run();
+  $("usehint").textContent="sent to Station 2 → read the result";
+  window.scrollTo({top:$("s2").getBoundingClientRect().top+window.scrollY-60,behavior:"smooth"});
+};
+
+/* ---- challenge ---- */
+const CHALLENGE="Tn gai yncbbk xfjy tux przalvzlkrcs xxtk n dephru gcaqx, jfe pvrkc cnytrkr kupy ybx ryznt mlv dfal veieteq t afeo tb mlffp wuh oerh tux xrowe or lvnct. Gaip jcogx me fsismmet llcaesres fh xyr hagvldny rrthzar oixv r fsohehve daj hrcl qot. Plva joh aemr cenw xyr cojl eeq qohgh kup krrafeo, srgh nbcd otgb nwoaz xyr dazx ulvpt jbvv: PLBVGIK{gse_gtfcr_cezxqsrcs}";
+$("challenge").textContent=CHALLENGE;
+$("loadchal").onclick=()=>{
+  $("ct").value=CHALLENGE; $("estimate").click();
+  window.scrollTo({top:$("s3").getBoundingClientRect().top+window.scrollY-60,behavior:"smooth"});
+};
+
+/* ---- flag check (answer stored as a hash, not in the clear) ---- */
+const FLAG_HASH="42cd2c59595b793d771663a6ee31ffe01261f30d9f06bee4132f19aeaacbf831";
+async function sha256(str){
+  const buf=await crypto.subtle.digest("SHA-256",new TextEncoder().encode(str));
+  return [...new Uint8Array(buf)].map(b=>b.toString(16).padStart(2,"0")).join("");
+}
+$("checkflag").onclick=async()=>{
+  const raw=$("flag").value.trim().toLowerCase();
+  const v=$("verdict");
+  if(!raw){ v.className="verdict no"; v.textContent="type or paste the flag first."; return; }
+  const norm=raw.replace(/\s+/g,"");
+  const h=await sha256(norm);
+  if(h===FLAG_HASH){
+    v.className="verdict ok"; v.textContent="✓ correct.";
+    $("seal").classList.add("show");
+    $("seal").scrollIntoView({behavior:"smooth",block:"center"});
+  } else {
+    v.className="verdict no";
+    v.textContent=/cabinet\{.*\}/.test(norm)
+      ? "close — right shape, wrong contents. Re-check your decode."
+      : "not yet — the flag looks like CABINET{...}. Finish the decode at Station 2.";
+    $("seal").classList.remove("show");
+  }
+};
+$("flag").addEventListener("keydown",e=>{ if(e.key==="Enter")$("checkflag").click(); });
+
+/* ---- load from share hash ---- */
+(function(){
+  const m=location.hash.match(/#c=(.+)$/);
+  if(m){ try{
+    const p=JSON.parse(decodeURIComponent(escape(atob(m[1]))));
+    if(p.t!==undefined)$("inp").value=p.t;
+    if(p.k!==undefined)$("key").value=p.k;
+    if(p.m){ mode=p.m; $("mode").querySelectorAll("button").forEach(x=>x.classList.toggle("on",x.dataset.mode===mode)); }
+  }catch(e){} }
+  run();
+})();
+
+/* ---- scrollspy on the step nav ---- */
+(function(){
+  const links=[...document.querySelectorAll('nav.path a')];
+  const map={}; links.forEach(a=>map[a.getAttribute('href').slice(1)]=a);
+  const obs=new IntersectionObserver(es=>{
+    es.forEach(e=>{ if(e.isIntersecting){
+      links.forEach(l=>l.classList.remove('active'));
+      map[e.target.id] && map[e.target.id].classList.add('active');
+    }});
+  },{rootMargin:"-45% 0px -50% 0px"});
+  ["s1","s2","s3","s4"].forEach(id=>obs.observe($(id)));
+})();
+</script>
+</body>
+</html>

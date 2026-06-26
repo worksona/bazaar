@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Cabinet of Ciphers · №3 — Transposition</title>
+<style>
+  :root{
+    --paper:#efe6d2;--paper2:#e7dabd;--panel:#f3ecda;--edge:#d9c8a1;
+    --ink:#241f17;--ink-soft:#5a5142;--ink-faint:#8a7d66;
+    --rule:#cdbc96;--rule-soft:#dccfab;
+    --brass:#946312;--brass-bright:#b3832a;--ox:#8a2a20;--teal:#256b62;--good:#3c7a37;
+    --display:"Hoefler Text","Iowan Old Style","Palatino Linotype",Palatino,"Book Antiqua",Georgia,serif;
+    --body:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,"Times New Roman",serif;
+    --mono:ui-monospace,"SF Mono",SFMono-Regular,Menlo,Monaco,Consolas,monospace;
+    --shadow:0 1px 0 rgba(255,253,245,.7) inset,0 14px 30px -22px rgba(40,30,10,.6);
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{margin:0;color:var(--ink);font-family:var(--body);line-height:1.62;font-size:17px;background:radial-gradient(120% 80% at 50% -10%,#f6efdd 0%,var(--paper) 55%,#e7dcc2 100%) fixed;}
+  body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:0;mix-blend-mode:multiply;opacity:.5;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.045'/%3E%3C/svg%3E");}
+  .wrap{position:relative;z-index:1;max-width:900px;margin:0 auto;padding:30px 22px 110px}
+  a{color:var(--teal)}
+  .back{font-family:var(--mono);font-size:12px;letter-spacing:.06em;text-transform:uppercase;text-decoration:none;color:var(--ink-faint)}
+  .back:hover{color:var(--brass)}
+  .kicker{font-family:var(--mono);font-size:11px;letter-spacing:.28em;text-transform:uppercase;color:var(--brass);margin:18px 0 8px}
+  header h1{font-family:var(--display);font-weight:600;font-size:clamp(30px,6vw,46px);line-height:1.05;margin:0 0 8px}
+  header h1 .no{color:var(--ox)}
+  .lede{font-size:18px;color:var(--ink-soft);font-style:italic;margin:0 0 14px;max-width:54ch}
+  .meta{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:6px}
+  .chip{font-family:var(--mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;border:1px solid var(--edge);background:var(--panel);border-radius:999px;padding:4px 12px;color:var(--ink-soft)}
+  .chip.grade{border-color:var(--brass);color:var(--brass)}.chip b{color:var(--ink)}
+  nav.path{position:sticky;top:0;z-index:5;margin:22px -22px 0;padding:10px 22px;background:linear-gradient(var(--paper),rgba(239,230,210,.86));backdrop-filter:blur(6px);border-bottom:1px solid var(--rule)}
+  nav.path ol{list-style:none;display:flex;gap:6px;margin:0;padding:0;flex-wrap:wrap;font-family:var(--mono);font-size:11.5px;letter-spacing:.04em;text-transform:uppercase}
+  nav.path a{display:flex;align-items:center;gap:8px;text-decoration:none;color:var(--ink-faint);padding:6px 11px;border-radius:8px;border:1px solid transparent}
+  nav.path a .n{width:19px;height:19px;border-radius:50%;border:1px solid var(--edge);display:grid;place-items:center;font-size:10px;color:var(--ink-soft)}
+  nav.path a:hover{color:var(--ink);background:#f7f0de}
+  nav.path a.active{color:var(--ox);border-color:var(--rule);background:#f7efdb}
+  nav.path a.active .n{border-color:var(--ox);background:var(--ox);color:#fbf3e3}
+  .step{position:relative;background:var(--panel);border:1px solid var(--edge);border-radius:14px;padding:26px 26px 24px;margin:26px 0;box-shadow:var(--shadow)}
+  .step::after{content:"";position:absolute;inset:6px;border:1px solid var(--rule-soft);border-radius:9px;pointer-events:none}
+  .step>*{position:relative}
+  .step-head{display:flex;align-items:baseline;gap:14px;margin:0 0 4px}
+  .medallion{flex:none;width:34px;height:34px;border-radius:50%;display:grid;place-items:center;font-family:var(--mono);font-size:14px;font-weight:700;color:#fbf3e3;background:var(--brass);box-shadow:0 0 0 3px #f3ecda,0 0 0 4px var(--brass)}
+  .step.teal .medallion{background:var(--teal);box-shadow:0 0 0 3px #f3ecda,0 0 0 4px var(--teal)}
+  .step.ox .medallion{background:var(--ox);box-shadow:0 0 0 3px #f3ecda,0 0 0 4px var(--ox)}
+  .step h2{font-family:var(--display);font-weight:600;font-size:25px;margin:0}
+  .tagline{color:var(--ink-soft);font-style:italic;margin:2px 0 18px;font-size:15.5px}
+  h3{font-family:var(--mono);font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--teal);margin:22px 0 8px}
+  .step.ox h3{color:var(--ox)}
+  p{margin:0 0 12px}
+  .dropcap::first-letter{float:left;font-family:var(--display);font-size:58px;line-height:.78;font-weight:600;padding:6px 10px 0 0;color:var(--ox)}
+  label{display:block;font-family:var(--mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-faint);margin:14px 0 5px}
+  textarea,input[type=text]{width:100%;background:#fbf4e2;color:var(--ink);border:1px solid var(--edge);border-radius:9px;padding:11px 12px;font-family:var(--mono);font-size:14px;line-height:1.5}
+  textarea{min-height:80px;resize:vertical}
+  input[type=text]:focus,textarea:focus{outline:none;border-color:var(--brass);box-shadow:0 0 0 3px rgba(148,99,18,.14)}
+  .row{display:flex;gap:18px;flex-wrap:wrap}.row>div{flex:1;min-width:250px}
+  .controls{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin:14px 0 0}
+  .btn{font-family:var(--mono);font-size:12px;letter-spacing:.06em;font-weight:700;cursor:pointer;border-radius:9px;padding:10px 15px;border:1px solid transparent;transition:transform .06s,filter .15s}
+  .btn:active{transform:translateY(1px)}
+  .btn--brass{background:var(--brass);color:#fbf3e3}.btn--brass:hover{filter:brightness(1.08)}
+  .btn--ox{background:var(--ox);color:#fbf3e3}.btn--ox:hover{filter:brightness(1.08)}
+  .btn--teal{background:var(--teal);color:#fbf3e3}.btn--teal:hover{filter:brightness(1.08)}
+  .btn--ghost{background:transparent;border-color:var(--edge);color:var(--ink-soft)}.btn--ghost:hover{border-color:var(--brass);color:var(--brass)}
+  .seg{display:inline-flex;border:1px solid var(--edge);border-radius:9px;overflow:hidden;background:#fbf4e2}
+  .seg button{font-family:var(--mono);font-size:12px;letter-spacing:.06em;background:transparent;border:0;color:var(--ink-faint);padding:9px 16px;cursor:pointer}
+  .seg button.on{background:var(--teal);color:#fbf3e3;font-weight:700}
+  .hint{color:var(--ink-faint);font-size:13px;font-style:italic} .mono{font-family:var(--mono)}
+  .out{white-space:pre-wrap;word-break:break-word;background:#fbf4e2;border:1px solid var(--edge);border-radius:9px;padding:12px;font-family:var(--mono);font-size:14px;min-height:48px}
+  .grid{font-family:var(--mono);font-size:13px;overflow:auto;background:#fbf4e2;border:1px dashed var(--edge);border-radius:9px;padding:10px 12px;white-space:pre;color:var(--ink-soft);margin-top:10px;line-height:1.8}
+  .grid .hdr{color:var(--ox);font-weight:700}
+  details{margin-top:14px;border-top:1px solid var(--rule-soft);padding-top:10px}
+  details summary{cursor:pointer;font-family:var(--mono);font-size:12px;letter-spacing:.06em;color:var(--teal);list-style:none}
+  details summary::-webkit-details-marker{display:none}
+  details summary::before{content:"▸ ";color:var(--brass)} details[open] summary::before{content:"▾ "}
+  .callout{display:flex;gap:12px;align-items:flex-start;background:#fbf4e2;border:1px solid var(--edge);border-left:4px solid var(--teal);border-radius:9px;padding:13px 15px;margin-top:14px;font-size:15px}
+  .callout .big{font-family:var(--display);font-size:30px;line-height:1;color:var(--teal);font-weight:700}
+  .widths{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+  .widths button{font-family:var(--mono);font-size:13px;border:1px solid var(--edge);background:#fbf4e2;color:var(--ink-soft);border-radius:8px;padding:6px 12px;cursor:pointer}
+  .widths button.on{background:var(--ox);color:#fbf3e3;border-color:var(--ox);font-weight:700}
+  .tiles{display:flex;gap:6px;flex-wrap:wrap;margin-top:12px}
+  .tile{background:#fbf4e2;border:1px solid var(--edge);border-radius:8px;padding:8px 6px 6px;text-align:center;min-width:50px}
+  .tile .col{font-family:var(--mono);font-size:13px;writing-mode:vertical-rl;text-orientation:upright;letter-spacing:1px;margin:0 auto 6px;color:var(--ink);max-height:160px;overflow:hidden}
+  .tile .mv{display:flex;gap:3px;justify-content:center}
+  .tile .mv button{font-family:var(--mono);font-size:11px;border:1px solid var(--edge);background:#f3ecda;color:var(--ox);border-radius:5px;padding:1px 6px;cursor:pointer}
+  .preview{white-space:pre-wrap;word-break:break-word;background:#fbf4e2;border:1px solid var(--edge);border-radius:9px;padding:12px;font-family:var(--mono);font-size:14px;line-height:1.7;margin-top:12px}
+  .quay{background:#fbf4e2;border:1px solid var(--edge);border-radius:10px;padding:16px;font-family:var(--mono);font-size:13.5px;line-height:1.7;white-space:pre-wrap;word-break:break-word;color:var(--ink-soft);box-shadow:inset 0 0 40px -28px rgba(40,30,10,.8)}
+  ol.checklist{margin:6px 0 0;padding-left:0;list-style:none;counter-reset:c}
+  ol.checklist li{counter-increment:c;position:relative;padding:5px 0 5px 34px;font-size:15px}
+  ol.checklist li::before{content:counter(c);position:absolute;left:0;top:4px;width:22px;height:22px;border-radius:50%;background:var(--brass);color:#fbf3e3;font-family:var(--mono);font-size:11px;display:grid;place-items:center}
+  .flagbox{display:flex;gap:10px;flex-wrap:wrap;align-items:stretch;margin-top:8px}.flagbox input{flex:1;min-width:240px}
+  .verdict{margin-top:12px;font-family:var(--mono);font-size:14px;min-height:22px}.verdict.ok{color:var(--good)}.verdict.no{color:var(--ox)}
+  .seal{display:none;align-items:center;gap:14px;margin-top:14px;animation:pop .5s ease both}.seal.show{display:flex}
+  .seal .wax{width:62px;height:62px;flex:none;border-radius:50%;background:radial-gradient(circle at 38% 34%,#c0432f,var(--ox) 60%,#6e1f17);color:#f3d9c8;display:grid;place-items:center;font-family:var(--display);font-weight:700;font-size:13px;letter-spacing:.05em;box-shadow:0 6px 16px -8px rgba(110,31,23,.8),inset 0 2px 4px rgba(255,255,255,.25);transform:rotate(-7deg)}
+  .seal .msg b{font-family:var(--display);font-size:20px;color:var(--ox)}
+  @keyframes pop{0%{transform:scale(.7);opacity:0}60%{transform:scale(1.06)}100%{transform:scale(1);opacity:1}}
+  footer{margin-top:40px;color:var(--ink-faint);font-size:12.5px;font-family:var(--mono);text-align:center;line-height:1.8}
+  .priv{display:inline-block;border:1px solid var(--edge);border-radius:999px;padding:4px 12px;margin-bottom:8px}
+  ::selection{background:rgba(138,42,32,.18)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <a class="back" href="../../">← back to The Bazaar</a>
+  <div class="kicker">The Bazaar · Cabinet of Ciphers · №3</div>
+  <header>
+    <h1>The <span class="no">Transposition</span> Cipher</h1>
+    <p class="lede">It changes nothing about <em>which</em> letters you wrote — only the order you
+      read them in. So frequency counting is useless, and the break is pure anagram.</p>
+    <div class="meta">
+      <span class="chip grade">difficulty · intermediate</span>
+      <span class="chip">⏱ <b>20–30 min</b></span>
+      <span class="chip">you’ll learn <b>columnar grids + anagram attacks</b></span>
+    </div>
+  </header>
+
+  <nav class="path" aria-label="steps"><ol>
+    <li><a href="#s1"><span class="n">1</span> Learn</a></li>
+    <li><a href="#s2"><span class="n">2</span> Encode / Decode</a></li>
+    <li><a href="#s3"><span class="n">3</span> Analyze</a></li>
+    <li><a href="#s4"><span class="n">4</span> Crack the challenge</a></li>
+  </ol></nav>
+
+  <p class="hint" style="margin-top:18px">New here? Read top to bottom — each station builds on the
+    one before, and the last hands you a flag.</p>
+
+  <!-- STEP 1 -->
+  <section class="step" id="s1">
+    <div class="step-head"><span class="medallion">1</span><h2>Learn — same letters, new order</h2></div>
+    <p class="tagline">Write the message into a grid by rows; read it back out by columns.</p>
+    <p class="dropcap"><b>A columnar transposition</b> writes your message across a grid whose width
+      is set by a keyword, then reads the grid down its columns — taking the columns in the
+      alphabetical order of the keyword’s letters. With keyword <span class="mono">QUAY</span> the
+      columns are read A, Q, U, Y → 3rd, 1st, 2nd, 4th. The letters are all still there; only their
+      order has changed.</p>
+    <div class="grid" aria-hidden="true"><span class="hdr">Q U A Y</span>
+M E E T
+M E B Y
+T H E W
+A L L X   → read columns A,Q,U,Y → <span style="color:var(--ox)">EBELMMTAEEHL TYWX</span></div>
+    <h3>Why frequency analysis fails — and what works instead</h3>
+    <p>Because every original letter survives untouched, the ciphertext has the <em>exact</em> letter
+      counts of English. Counting tells you nothing. The way in is the <b>shape</b>: guess the number
+      of columns, cut the ciphertext back into those columns, then shuffle the columns until the rows
+      read as language. It’s a jigsaw, not a tally.</p>
+    <div class="callout"><span class="big">“</span><div><b>Best use today:</b> transposition pairs
+      beautifully with substitution — scramble the letters <em>and</em> their order and each attack
+      blinds the other. Armies layered them for exactly that reason.</div></div>
+  </section>
+
+  <!-- STEP 2 -->
+  <section class="step teal" id="s2">
+    <div class="step-head"><span class="medallion">2</span><h2>Encode &amp; Decode — the engine</h2></div>
+    <p class="tagline">The keyword sets the column count and the read order. Watch the grid fill.</p>
+    <div class="controls" style="margin-top:0">
+      <span class="seg" id="mode"><button data-mode="encode" class="on">encode →</button><button data-mode="decode">decode ←</button></span>
+      <span class="hint">spaces and punctuation ride along in the grid; a “·” marks padding</span>
+    </div>
+    <label for="key">keyword</label>
+    <input id="key" type="text" value="QUAYSIDE" autocomplete="off" spellcheck="false">
+    <div class="row">
+      <div><label for="inp">message in</label><textarea id="inp" spellcheck="false">Meet me by the old harbor wall at dusk.</textarea></div>
+      <div><label for="outp">result out</label><div id="outp" class="out mono"></div></div>
+    </div>
+    <div class="grid" id="gridview" aria-hidden="true"></div>
+    <div class="controls"><button id="swap" class="btn btn--ghost">↺ use result as input</button></div>
+  </section>
+
+  <!-- STEP 3 -->
+  <section class="step ox" id="s3">
+    <div class="step-head"><span class="medallion">3</span><h2>Analyze — the anagram table</h2></div>
+    <p class="tagline">Pick a width, cut the message into columns, then slide them until the rows read.</p>
+    <label for="ct">ciphertext under attack</label>
+    <textarea id="ct" spellcheck="false" placeholder="paste a ciphertext — or load the challenge from Station 4"></textarea>
+    <h3>Step A · choose a column count</h3>
+    <p class="hint" style="font-style:normal">The grid must be full, so the width has to divide the
+      length evenly. These are the lengths that fit:</p>
+    <div class="widths" id="widths"></div>
+    <h3>Step B · slide the columns into order</h3>
+    <p class="hint" style="font-style:normal">Each tile is one column of the grid, cut from the
+      ciphertext. Use ◀ ▶ to reorder them; the rows below update live. When the rows read as
+      English, you’ve solved it.</p>
+    <div class="tiles" id="tiles"></div>
+    <h3>rows read across, in this order</h3>
+    <div class="preview" id="preview">— choose a column count to begin —</div>
+  </section>
+
+  <!-- STEP 4 -->
+  <section class="step ox" id="s4">
+    <div class="step-head"><span class="medallion">4</span><h2>Crack the challenge</h2></div>
+    <p class="tagline">A dispatch pulled apart and read down its columns. Put it back together.</p>
+    <div class="quay" id="challenge"></div>
+    <div class="controls"><button id="loadchal" class="btn btn--ox">load it into the anagram table →</button>
+      <span class="hint">sends this text to Station 3 and lists the widths that fit</span></div>
+    <h3>How to crack it</h3>
+    <ol class="checklist">
+      <li><b>Load</b> the dispatch into the table (button above).</li>
+      <li>Try the offered <b>column counts</b> — the keyword has a single-digit length.</li>
+      <li>Slide the <b>columns</b> with ◀ ▶ until the rows read as plain English.</li>
+      <li>The last words form a flag like <span class="mono">CABINET{…}</span>. Paste it below.</li>
+    </ol>
+    <label for="flag">enter the flag</label>
+    <div class="flagbox"><input id="flag" type="text" autocomplete="off" spellcheck="false" placeholder="CABINET{...}"><button id="checkflag" class="btn btn--ox">seal it ✓</button></div>
+    <div class="verdict" id="verdict"></div>
+    <div class="seal" id="seal"><div class="wax">SOLVED</div><div class="msg"><b>The dispatch re-forms.</b><br><span class="hint" style="font-style:normal">№3 complete — you anagrammed a cipher that hides in plain sight.</span></div></div>
+    <details><summary>stuck? reveal the keyword (spoiler)</summary>
+      <p class="hint" style="margin:10px 0 0">The keyword is <b class="mono" style="color:var(--ox)">QUAYSIDE</b> — 8 columns.
+        Enter it at Station 2, switch to <b>decode</b>, and paste the challenge as the message.</p></details>
+  </section>
+
+  <footer>
+    <span class="priv">🔒 runs entirely in your browser — nothing is sent anywhere</span><br>
+    The Cabinet of Ciphers · a graded collection · <a href="../PUZ-0004-playfair/">next: №4 Playfair →</a>
+  </footer>
+</div>
+
+<script>
+const $=id=>document.getElementById(id);
+const PAD="·";
+function colOrder(keyword){const k=keyword.toUpperCase().replace(/[^A-Z]/g,"");return k.split("").map((c,i)=>[c,i]).sort((a,b)=>a[0]<b[0]?-1:a[0]>b[0]?1:a[1]-b[1]).map(x=>x[1]);}
+function transEnc(text,keyword){const cols=keyword.replace(/[^A-Za-z]/g,"").length;if(!cols)return text;let s=text;while(s.length%cols!==0)s+=PAD;const order=colOrder(keyword);let o="";for(const c of order)for(let i=c;i<s.length;i+=cols)o+=s[i];return o;}
+function transDec(text,keyword){const cols=keyword.replace(/[^A-Za-z]/g,"").length;if(!cols)return text;const rows=Math.ceil(text.length/cols);const order=colOrder(keyword);const grid=new Array(text.length);let p=0;for(const c of order)for(let r=0;r<rows;r++){const idx=r*cols+c;if(idx<text.length)grid[idx]=text[p++];}return grid.join("").replace(new RegExp(PAD+"+$"),"");}
+const esc=s=>s.replace(/[<>&]/g,m=>({'<':'&lt;','>':'&gt;','&':'&amp;'}[m]));
+
+/* engine */
+let mode="encode";
+$("mode").querySelectorAll("button").forEach(b=>b.onclick=()=>{mode=b.dataset.mode;$("mode").querySelectorAll("button").forEach(x=>x.classList.toggle("on",x===b));run();});
+function run(){
+  const kw=$("key").value;
+  $("outp").textContent=(mode==="decode"?transDec:transEnc)($("inp").value,kw);
+  // show the grid for the current encode input
+  const cols=kw.replace(/[^A-Za-z]/g,"").length;
+  if(cols && mode==="encode"){
+    let s=$("inp").value;while(s.length%cols!==0)s+=PAD;
+    const order=colOrder(kw), rank=new Array(cols);
+    order.forEach((c,r)=>rank[c]=r+1);
+    let h='<span class="hdr">'+rank.map(n=>String(n).padStart(2)).join("")+'</span>\n';
+    for(let r=0;r*cols<s.length;r++){let line="";for(let c=0;c<cols;c++)line+=" "+esc(s[r*cols+c]||" ");h+=line+"\n";}
+    h+='<span class="hint">columns read in the numbered order →</span>';
+    $("gridview").innerHTML=h;
+  } else $("gridview").innerHTML='<span class="hint">grid shown when encoding</span>';
+}
+$("inp").oninput=run;$("key").oninput=run;
+$("swap").onclick=()=>{$("inp").value=$("outp").textContent;run();};
+
+/* attacker */
+let chunks=[], order=[], rowsN=0;
+function divisors(n){const d=[];for(let i=2;i<=12&&i<n;i++)if(n%i===0)d.push(i);return d;}
+function buildWidths(){
+  const s=$("ct").value; const n=s.length;
+  const ds=divisors(n);
+  $("widths").innerHTML=ds.length?ds.map(d=>`<button data-w="${d}">${d} cols</button>`).join(""):'<span class="hint">paste a ciphertext first</span>';
+  $("widths").querySelectorAll("button").forEach(b=>b.onclick=()=>{
+    $("widths").querySelectorAll("button").forEach(x=>x.classList.remove("on"));b.classList.add("on");
+    setCols(parseInt(b.dataset.w));
+  });
+}
+function setCols(C){
+  const s=$("ct").value; rowsN=s.length/C;
+  chunks=[]; for(let i=0;i<C;i++)chunks.push(s.slice(i*rowsN,(i+1)*rowsN));
+  order=[...Array(C).keys()];
+  renderTiles();
+}
+function renderTiles(){
+  if(!chunks.length){$("tiles").innerHTML="";return;}
+  $("tiles").innerHTML=order.map((ci,pos)=>{
+    const colText=chunks[ci].split("").map(esc).join("");
+    return `<div class="tile"><div class="col">${colText}</div><div class="mv"><button data-pos="${pos}" data-d="-1">◀</button><button data-pos="${pos}" data-d="1">▶</button></div></div>`;
+  }).join("");
+  $("tiles").querySelectorAll("button").forEach(b=>b.onclick=()=>{
+    const pos=parseInt(b.dataset.pos), d=parseInt(b.dataset.d), np=pos+d;
+    if(np<0||np>=order.length)return;
+    [order[pos],order[np]]=[order[np],order[pos]];
+    renderTiles(); updatePreview();
+  });
+  updatePreview();
+}
+function updatePreview(){
+  if(!chunks.length){$("preview").textContent="— choose a column count to begin —";return;}
+  let out="";
+  for(let r=0;r<rowsN;r++)for(const ci of order)out+=chunks[ci][r]||"";
+  out=out.replace(new RegExp(PAD+"+$"),"");
+  $("preview").innerHTML=esc(out);
+}
+$("ct").oninput=buildWidths;
+
+/* challenge */
+const CHALLENGE="tiditly;ylo ot gsyilt peGe m skonrltrdiaidi seCo_}snnaieu rtrce,ntlnaTk fismc   t oest  a epr sdNr_·p obcrsoah ha ttloth s d bolmbotr  hrpnP eeTssE_k·no  ht tc eirmuee   ceorsu ,een,ehn ssl.c b.enIee·Aohtohsenmei dsiest eiht.telaea hdcueelgaanaha:Tieaisgwtuissdh eoltug.ih genfshgisrtmlwa ena tmeBdh· sihu  dlb ny onr ha sah hruyscreeon aautnckig {syrten eo  erwuhc  onlrte u onta w  uio nge li  Art·";
+$("challenge").textContent=CHALLENGE;
+$("loadchal").onclick=()=>{$("ct").value=CHALLENGE;buildWidths();window.scrollTo({top:$("s3").getBoundingClientRect().top+window.scrollY-60,behavior:"smooth"});};
+
+/* flag */
+const FLAG_HASH="53b94b5ed7d3053f8a73dbdbb87532ef42c5cef7f65e94fbb131560792eefd91";
+async function sha256(str){const b=await crypto.subtle.digest("SHA-256",new TextEncoder().encode(str));return [...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,"0")).join("");}
+const norm=s=>s.toLowerCase().replace(/[^a-z0-9]/g,"");
+$("checkflag").onclick=async()=>{
+  const raw=$("flag").value.trim(),v=$("verdict");
+  if(!raw){v.className="verdict no";v.textContent="type or paste the flag first.";return;}
+  const h=await sha256(norm(raw));
+  if(h===FLAG_HASH){v.className="verdict ok";v.textContent="✓ correct.";$("seal").classList.add("show");$("seal").scrollIntoView({behavior:"smooth",block:"center"});}
+  else{v.className="verdict no";v.textContent=/cabinet/i.test(raw)?"close — right shape, wrong contents. Keep sliding columns.":"not yet — the flag looks like CABINET{...}. Finish re-ordering.";$("seal").classList.remove("show");}
+};
+$("flag").addEventListener("keydown",e=>{if(e.key==="Enter")$("checkflag").click();});
+
+/* scrollspy */
+(function(){const links=[...document.querySelectorAll('nav.path a')];const map={};links.forEach(a=>map[a.getAttribute('href').slice(1)]=a);
+  const obs=new IntersectionObserver(es=>{es.forEach(e=>{if(e.isIntersecting){links.forEach(l=>l.classList.remove('active'));map[e.target.id]&&map[e.target.id].classList.add('active');}});},{rootMargin:"-45% 0px -50% 0px"});
+  ["s1","s2","s3","s4"].forEach(id=>obs.observe($(id)));})();
+run();
+</script>
+</body>
+</html>

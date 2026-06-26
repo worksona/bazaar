@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Lamplighter’s Logic · №11 — Sudoku</title>
+<style>
+  :root{--paper:#efe6d2;--panel:#f3ecda;--edge:#d9c8a1;--ink:#241f17;--ink-soft:#5a5142;--ink-faint:#8a7d66;
+    --rule:#cdbc96;--rule-soft:#dccfab;--brass:#946312;--ox:#8a2a20;--teal:#256b62;--good:#3c7a37;
+    --display:"Hoefler Text","Iowan Old Style","Palatino Linotype",Palatino,"Book Antiqua",Georgia,serif;
+    --body:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,serif;--mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+    --shadow:0 1px 0 rgba(255,253,245,.7) inset,0 14px 30px -22px rgba(40,30,10,.6);}
+  *{box-sizing:border-box}html{scroll-behavior:smooth}
+  body{margin:0;color:var(--ink);font-family:var(--body);line-height:1.62;font-size:17px;background:radial-gradient(120% 80% at 50% -10%,#f6efdd 0%,var(--paper) 55%,#e7dcc2 100%) fixed;}
+  body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:0;mix-blend-mode:multiply;opacity:.5;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.045'/%3E%3C/svg%3E");}
+  .wrap{position:relative;z-index:1;max-width:760px;margin:0 auto;padding:30px 22px 110px}
+  a{color:var(--teal)}.back{font-family:var(--mono);font-size:12px;letter-spacing:.06em;text-transform:uppercase;text-decoration:none;color:var(--ink-faint)}.back:hover{color:var(--brass)}
+  .kicker{font-family:var(--mono);font-size:11px;letter-spacing:.28em;text-transform:uppercase;color:var(--brass);margin:18px 0 8px}
+  header h1{font-family:var(--display);font-weight:600;font-size:clamp(30px,6vw,44px);line-height:1.05;margin:0 0 8px}header h1 .no{color:var(--ox)}
+  .lede{font-size:18px;color:var(--ink-soft);font-style:italic;margin:0 0 14px;max-width:54ch}
+  .meta{display:flex;gap:10px;flex-wrap:wrap;margin-top:6px}
+  .chip{font-family:var(--mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;border:1px solid var(--edge);background:var(--panel);border-radius:999px;padding:4px 12px;color:var(--ink-soft)}
+  .chip.grade{border-color:var(--brass);color:var(--brass)}.chip b{color:var(--ink)}
+  nav.path{position:sticky;top:0;z-index:5;margin:22px -22px 0;padding:10px 22px;background:linear-gradient(var(--paper),rgba(239,230,210,.86));backdrop-filter:blur(6px);border-bottom:1px solid var(--rule)}
+  nav.path ol{list-style:none;display:flex;gap:6px;margin:0;padding:0;flex-wrap:wrap;font-family:var(--mono);font-size:11.5px;letter-spacing:.04em;text-transform:uppercase}
+  nav.path a{display:flex;align-items:center;gap:8px;text-decoration:none;color:var(--ink-faint);padding:6px 11px;border-radius:8px;border:1px solid transparent}
+  nav.path a .n{width:19px;height:19px;border-radius:50%;border:1px solid var(--edge);display:grid;place-items:center;font-size:10px}
+  nav.path a:hover{color:var(--ink);background:#f7f0de}nav.path a.active{color:var(--ox);border-color:var(--rule);background:#f7efdb}
+  nav.path a.active .n{border-color:var(--ox);background:var(--ox);color:#fbf3e3}
+  .step{position:relative;background:var(--panel);border:1px solid var(--edge);border-radius:14px;padding:26px 26px 24px;margin:26px 0;box-shadow:var(--shadow)}
+  .step::after{content:"";position:absolute;inset:6px;border:1px solid var(--rule-soft);border-radius:9px;pointer-events:none}.step>*{position:relative}
+  .step-head{display:flex;align-items:baseline;gap:14px;margin:0 0 4px}
+  .medallion{flex:none;width:34px;height:34px;border-radius:50%;display:grid;place-items:center;font-family:var(--mono);font-size:14px;font-weight:700;color:#fbf3e3;background:var(--brass);box-shadow:0 0 0 3px var(--panel),0 0 0 4px var(--brass)}
+  .step.teal .medallion{background:var(--teal);box-shadow:0 0 0 3px var(--panel),0 0 0 4px var(--teal)}
+  .step.ox .medallion{background:var(--ox);box-shadow:0 0 0 3px var(--panel),0 0 0 4px var(--ox)}
+  .step h2{font-family:var(--display);font-weight:600;font-size:24px;margin:0}
+  .tagline{color:var(--ink-soft);font-style:italic;margin:2px 0 18px;font-size:15.5px}
+  h3{font-family:var(--mono);font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--teal);margin:20px 0 8px}.step.ox h3{color:var(--ox)}
+  p{margin:0 0 12px}.dropcap::first-letter{float:left;font-family:var(--display);font-size:56px;line-height:.78;font-weight:600;padding:6px 10px 0 0;color:var(--ox)}
+  .hint{color:var(--ink-faint);font-size:13px;font-style:italic}.mono{font-family:var(--mono)}
+  .btn{font-family:var(--mono);font-size:12px;letter-spacing:.06em;font-weight:700;cursor:pointer;border-radius:9px;padding:10px 15px;border:1px solid var(--edge);background:transparent;color:var(--ink-soft)}.btn:hover{border-color:var(--brass);color:var(--brass)}
+  .controls{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:14px 0 0;justify-content:center}
+  .callout{display:flex;gap:12px;align-items:flex-start;background:#fbf4e2;border:1px solid var(--edge);border-left:4px solid var(--teal);border-radius:9px;padding:13px 15px;margin-top:14px;font-size:15px}.callout .big{font-family:var(--display);font-size:30px;line-height:1;color:var(--teal);font-weight:700}
+  .board{display:grid;grid-template-columns:repeat(9,1fr);width:max-content;margin:6px auto 0;background:#15100b;border:2px solid #15100b;border-radius:8px;overflow:hidden}
+  .cell{width:42px;height:42px;display:grid;place-items:center;font-family:var(--mono);font-size:20px;cursor:pointer;background:#fbf4e2;color:var(--teal);border:1px solid var(--rule-soft);user-select:none}
+  .cell.given{color:var(--ink);font-weight:700;background:#f0e7cf;cursor:default}
+  .cell.sel{box-shadow:inset 0 0 0 3px var(--brass)}
+  .cell.peer{background:#f4ecd6}
+  .cell.same{background:#efe1bd}
+  .cell.bad{color:var(--ox)!important;background:#f3d9d2}
+  .cell:nth-child(9n+3),.cell:nth-child(9n+6){border-right:2px solid #15100b}
+  .board>.cell:nth-child(n+19):nth-child(-n+27),.board>.cell:nth-child(n+46):nth-child(-n+54){border-bottom:2px solid #15100b}
+  .pad{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;max-width:320px;margin:14px auto 0}
+  .pad button{font-family:var(--mono);font-size:17px;font-weight:700;padding:10px 0;border:1px solid var(--edge);background:#fbf4e2;border-radius:8px;cursor:pointer;color:var(--ink)}
+  .pad button:hover{border-color:var(--brass);color:var(--brass)}
+  .status{font-family:var(--mono);font-size:13px;color:var(--ink-soft);margin-top:12px;text-align:center}.status .done{color:var(--good)}
+  .seal{display:none;align-items:center;gap:14px;margin-top:16px;animation:pop .5s ease both}.seal.show{display:flex}
+  .seal .wax{width:62px;height:62px;flex:none;border-radius:50%;background:radial-gradient(circle at 38% 34%,#c0432f,var(--ox) 60%,#6e1f17);color:#f3d9c8;display:grid;place-items:center;font-family:var(--display);font-weight:700;font-size:13px;box-shadow:0 6px 16px -8px rgba(110,31,23,.8);transform:rotate(-7deg)}
+  .seal .msg b{font-family:var(--display);font-size:20px;color:var(--ox)}
+  .flagline{font-family:var(--mono);font-size:15px;color:var(--ox);background:#f7efda;border:1px solid var(--brass);border-radius:8px;padding:8px 12px;display:inline-block;margin-top:8px}
+  @keyframes pop{0%{transform:scale(.7);opacity:0}60%{transform:scale(1.06)}100%{transform:scale(1)}}
+  footer{margin-top:40px;color:var(--ink-faint);font-size:12.5px;font-family:var(--mono);text-align:center;line-height:1.8}.priv{display:inline-block;border:1px solid var(--edge);border-radius:999px;padding:4px 12px;margin-bottom:8px}
+  ::selection{background:rgba(138,42,32,.18)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <a class="back" href="../../">← back to The Bazaar</a>
+  <div class="kicker">The Bazaar · The Lamplighter’s Logic · №11</div>
+  <header>
+    <h1><span class="no">Sudoku</span></h1>
+    <p class="lede">The one everybody knows — and still the cleanest deduction puzzle ever printed.
+      Nine of each digit, once per row, column, and box. No arithmetic, only logic.</p>
+    <div class="meta"><span class="chip grade">difficulty · intermediate</span><span class="chip">⏱ <b>10–25 min</b></span><span class="chip">you’ll learn <b>constraint elimination</b></span></div>
+  </header>
+  <nav class="path"><ol>
+    <li><a href="#s1"><span class="n">1</span> Learn</a></li>
+    <li><a href="#s2"><span class="n">2</span> Technique</a></li>
+    <li><a href="#s3"><span class="n">3</span> Solve</a></li>
+  </ol></nav>
+
+  <section class="step" id="s1">
+    <div class="step-head"><span class="medallion">1</span><h2>Learn — one of each, three ways</h2></div>
+    <p class="tagline">Curated into its modern form by Nikoli, the house behind this whole wing.</p>
+    <p class="dropcap"><b>Fill the 9×9 grid</b> so that every row, every column, and every 3×3 box
+      contains the digits 1–9 exactly once. The givens never change; you place the rest. There’s
+      precisely one solution, reachable by pure elimination — no guessing, ever.</p>
+    <div class="callout"><span class="big">“</span><div><b>Why it belongs here:</b> Sudoku is the
+      purest constraint-satisfaction puzzle in print — the same logic a SAT solver runs, done by hand.
+      Master the eliminations here and Binairo, Kakuro, and the rest read like dialects of one language.</div></div>
+  </section>
+
+  <section class="step teal" id="s2">
+    <div class="step-head"><span class="medallion">2</span><h2>Technique — narrow, then place</h2></div>
+    <p class="tagline">Two ideas solve most grids; the rest is patience.</p>
+    <h3>The naked single</h3>
+    <p>For any empty cell, cross off every digit already in its row, column, or box. If only one digit
+      survives, it must go there.</p>
+    <h3>The hidden single</h3>
+    <p>Look at a single row, column, or box. If a digit can legally land in only one of its cells,
+      place it there — even if that cell could also take other digits.</p>
+    <p class="hint" style="font-style:normal">Click a cell, then a number (or press 1–9; Backspace
+      clears). Conflicts turn red; matching digits highlight so you can scan.</p>
+  </section>
+
+  <section class="step ox" id="s3">
+    <div class="step-head"><span class="medallion">3</span><h2>Solve — complete the grid</h2></div>
+    <p class="tagline">Fill every cell with no conflicts and the flag appears.</p>
+    <div class="board" id="board"></div>
+    <div class="pad" id="pad"></div>
+    <div class="status" id="status"></div>
+    <div class="controls"><button class="btn" id="reset">restart</button></div>
+    <div class="seal" id="seal"><div class="wax">SOLVED</div><div class="msg"><b>One of each.</b><br>
+      <span class="hint" style="font-style:normal">№11 complete — a classic, cleanly deduced. Your flag:</span><br>
+      <span class="flagline" id="flagline"></span></div></div>
+  </section>
+
+  <footer><span class="priv">🔒 runs entirely in your browser — nothing is sent anywhere</span><br>The Bazaar · the deduction wing · <a href="../../">back to the cabinet →</a></footer>
+</div>
+<script>
+const $=id=>document.getElementById(id);
+const PUZ="530070000600195000098000060800060003400803001700020006060000280000419005000080079";
+const FLAG="CABINET{one_of_each}";
+const given=[...PUZ].map(d=>+d);
+let g=given.slice(), sel=-1, solved=false;
+const el=$("board");
+function conflicts(){
+  const bad=new Set();
+  const groups=[];
+  for(let r=0;r<9;r++)groups.push([...Array(9)].map((_,c)=>r*9+c));
+  for(let c=0;c<9;c++)groups.push([...Array(9)].map((_,r)=>r*9+c));
+  for(let br=0;br<3;br++)for(let bc=0;bc<3;bc++){const b=[];for(let i=0;i<3;i++)for(let j=0;j<3;j++)b.push((br*3+i)*9+(bc*3+j));groups.push(b);}
+  for(const grp of groups){const seen={};for(const idx of grp){const v=g[idx];if(v){if(seen[v]!==undefined){bad.add(idx);bad.add(seen[v]);}else seen[v]=idx;}}}
+  return bad;
+}
+function render(){
+  const bad=conflicts(); const selV=sel>=0?g[sel]:0; let filled=0,h="";
+  for(let i=0;i<81;i++){
+    const v=g[i], isGiven=given[i]!==0; if(v)filled++;
+    const r=Math.floor(i/9),c=i%9, sr=sel>=0?Math.floor(sel/9):-1, sc=sel>=0?sel%9:-1;
+    const peer = sel>=0 && (r===sr||c===sc||(Math.floor(r/3)===Math.floor(sr/3)&&Math.floor(c/3)===Math.floor(sc/3)));
+    let cls="cell"+(isGiven?" given":"")+(i===sel?" sel":"")+(peer&&i!==sel?" peer":"")+(selV&&v===selV&&i!==sel?" same":"")+(bad.has(i)?" bad":"");
+    h+=`<div class="${cls}" data-i="${i}">${v||""}</div>`;
+  }
+  el.innerHTML=h;
+  el.querySelectorAll(".cell").forEach(d=>d.onclick=()=>{ if(solved)return; sel=+d.dataset.i; render(); });
+  const done=filled===81&&bad.size===0;
+  $("status").innerHTML= done?'<span class="done">✓ every row, column, and box complete.</span>':`<b>${81-filled}</b> cells to go${bad.size?' · <span style="color:var(--ox)">conflicts present</span>':''}`;
+  if(done&&!solved){ solved=true; $("flagline").textContent=FLAG; $("seal").classList.add("show"); $("seal").scrollIntoView({behavior:"smooth",block:"center"}); }
+}
+function place(v){ if(solved||sel<0||given[sel]!==0)return; g[sel]=v; render(); }
+$("pad").innerHTML=[1,2,3,4,5,6,7,8,9].map(n=>`<button data-n="${n}">${n}</button>`).join("")+'<button data-n="0">✕</button>';
+$("pad").querySelectorAll("button").forEach(b=>b.onclick=()=>place(+b.dataset.n));
+document.addEventListener("keydown",e=>{ if(e.key>="1"&&e.key<="9")place(+e.key); else if(e.key==="Backspace"||e.key==="Delete"||e.key==="0")place(0);
+  else if(sel>=0&&["ArrowUp","ArrowDown","ArrowLeft","ArrowRight"].includes(e.key)){e.preventDefault();let r=Math.floor(sel/9),c=sel%9;if(e.key==="ArrowUp")r=(r+8)%9;if(e.key==="ArrowDown")r=(r+1)%9;if(e.key==="ArrowLeft")c=(c+8)%9;if(e.key==="ArrowRight")c=(c+1)%9;sel=r*9+c;render();} });
+$("reset").onclick=()=>{ g=given.slice(); sel=-1; solved=false; $("seal").classList.remove("show"); render(); };
+render();
+(function(){const links=[...document.querySelectorAll('nav.path a')];const map={};links.forEach(a=>map[a.getAttribute('href').slice(1)]=a);
+  const obs=new IntersectionObserver(es=>{es.forEach(e=>{if(e.isIntersecting){links.forEach(l=>l.classList.remove('active'));map[e.target.id]&&map[e.target.id].classList.add('active');}});},{rootMargin:"-45% 0px -50% 0px"});
+  ["s1","s2","s3"].forEach(id=>obs.observe($(id)));})();
+</script>
+</body>
+</html>

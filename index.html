@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Bazaar — a cabinet of ciphers &amp; puzzles</title>
+<style>
+  :root{
+    --paper:#efe6d2; --paper2:#e7dabd; --panel:#f3ecda; --edge:#d9c8a1;
+    --ink:#241f17; --ink-soft:#5a5142; --ink-faint:#8a7d66;
+    --rule:#cdbc96; --rule-soft:#dccfab;
+    --brass:#946312; --brass-bright:#b3832a;
+    --ox:#8a2a20; --teal:#256b62;
+    --display:"Hoefler Text","Iowan Old Style","Palatino Linotype",Palatino,"Book Antiqua",Georgia,serif;
+    --body:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,"Times New Roman",serif;
+    --mono:ui-monospace,"SF Mono",SFMono-Regular,Menlo,Monaco,Consolas,monospace;
+    --shadow:0 1px 0 rgba(255,253,245,.7) inset, 0 14px 30px -22px rgba(40,30,10,.6);
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{margin:0;color:var(--ink);font-family:var(--body);line-height:1.62;font-size:17px;
+    background:radial-gradient(120% 80% at 50% -10%, #f6efdd 0%, var(--paper) 55%, #e7dcc2 100%) fixed;}
+  body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:0;mix-blend-mode:multiply;opacity:.5;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.045'/%3E%3C/svg%3E");}
+  .wrap{position:relative;z-index:1;max-width:880px;margin:0 auto;padding:54px 22px 110px}
+
+  a{color:var(--teal)}
+  .kicker{font-family:var(--mono);font-size:11px;letter-spacing:.32em;text-transform:uppercase;color:var(--brass);text-align:center}
+
+  /* masthead */
+  .mast{text-align:center;margin:14px 0 6px}
+  .mast h1{font-family:var(--display);font-weight:600;font-size:clamp(46px,11vw,84px);line-height:.95;margin:8px 0 4px;letter-spacing:.01em}
+  .mast .orn{color:var(--brass);font-size:20px;letter-spacing:.5em;margin:8px 0}
+  .tagline{font-size:19px;color:var(--ink-soft);font-style:italic;max-width:46ch;margin:0 auto}
+  .priv{display:inline-block;font-family:var(--mono);font-size:11px;letter-spacing:.08em;color:var(--ink-soft);
+    border:1px solid var(--edge);border-radius:999px;padding:5px 14px;margin-top:18px;background:var(--panel)}
+
+  .rule{height:0;border:0;border-top:1px solid var(--rule);box-shadow:0 3px 0 -2px var(--rule);margin:42px 0}
+  h2.sec{font-family:var(--mono);font-size:12px;letter-spacing:.2em;text-transform:uppercase;color:var(--brass);
+    text-align:center;margin:0 0 6px}
+  .sec-sub{text-align:center;color:var(--ink-faint);font-style:italic;margin:0 0 24px}
+
+  .lede{font-size:18.5px;max-width:60ch;margin:0 auto}
+  .lede.dropcap::first-letter{float:left;font-family:var(--display);font-size:64px;line-height:.74;font-weight:600;
+    padding:6px 12px 0 0;color:var(--ox)}
+
+  /* why grid */
+  .why{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px}
+  .feat{background:var(--panel);border:1px solid var(--edge);border-radius:12px;padding:18px 18px 16px;box-shadow:var(--shadow)}
+  .feat .ic{font-size:22px;line-height:1;margin-bottom:8px}
+  .feat h3{font-family:var(--display);font-size:18px;margin:0 0 4px;color:var(--ox)}
+  .feat p{margin:0;color:var(--ink-soft);font-size:15px}
+
+  /* how-it-works loop */
+  .loop{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;align-items:stretch}
+  .stepcell{flex:1;min-width:150px;background:var(--panel);border:1px solid var(--edge);border-radius:12px;
+    padding:16px 14px;text-align:center;position:relative;box-shadow:var(--shadow)}
+  .stepcell .n{width:30px;height:30px;border-radius:50%;display:grid;place-items:center;margin:0 auto 8px;
+    font-family:var(--mono);font-size:13px;font-weight:700;color:#fbf3e3;background:var(--brass)}
+  .stepcell h4{font-family:var(--display);font-size:17px;margin:0 0 4px}
+  .stepcell p{margin:0;font-size:13.5px;color:var(--ink-soft);line-height:1.45}
+  .stepcell:not(:last-child)::after{content:"→";position:absolute;right:-13px;top:50%;transform:translateY(-50%);
+    color:var(--brass);font-size:18px;z-index:2}
+  @media(max-width:560px){.stepcell:not(:last-child)::after{content:"↓";right:50%;top:auto;bottom:-15px;transform:translateX(50%)}}
+
+  .bestuse{background:#f7efda;border:1px solid var(--brass);border-radius:12px;padding:18px 20px;margin-top:24px}
+  .bestuse h3{font-family:var(--mono);font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--brass);margin:0 0 10px}
+  .bestuse ul{margin:0;padding-left:20px;color:var(--ink-soft);font-size:15px}
+  .bestuse li{margin:5px 0}
+  .bestuse b{color:var(--ink)}
+
+  /* collection */
+  .card{display:block;text-decoration:none;color:inherit;background:var(--panel);border:1px solid var(--edge);
+    border-radius:14px;padding:22px 24px;margin:16px 0;box-shadow:var(--shadow);position:relative;transition:transform .12s,border-color .15s}
+  .card:hover{border-color:var(--brass);transform:translateY(-2px)}
+  .card::after{content:"";position:absolute;inset:6px;border:1px solid var(--rule-soft);border-radius:9px;pointer-events:none}
+  .card>*{position:relative}
+  .card .tags{font-family:var(--mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--teal);margin-bottom:8px}
+  .card .num{font-family:var(--mono);color:var(--brass)}
+  .card h3{font-family:var(--display);font-size:24px;margin:0 0 6px;color:var(--ink)}
+  .card p{margin:0 0 14px;color:var(--ink-soft);font-size:15.5px}
+  .card .foot{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+  .pill{font-family:var(--mono);font-size:11px;letter-spacing:.06em;text-transform:uppercase;
+    border:1px solid var(--edge);border-radius:999px;padding:3px 11px;color:var(--ink-soft)}
+  .pill.grade{border-color:var(--brass);color:var(--brass)}
+  .pill.learn{border-style:dashed}
+  .open{margin-left:auto;font-family:var(--mono);font-size:12px;font-weight:700;letter-spacing:.04em;
+    color:#fbf3e3;background:var(--ox);border-radius:8px;padding:9px 15px}
+  .card:hover .open{filter:brightness(1.1)}
+
+  .card.locked{opacity:.72;cursor:default}
+  .card.locked:hover{transform:none;border-color:var(--edge)}
+  .card.locked .open{background:transparent;color:var(--ink-faint);border:1px solid var(--edge)}
+  .roadmap{font-family:var(--mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--brass);text-align:center;margin:26px 0 4px}
+
+  footer{margin-top:44px;color:var(--ink-faint);font-size:12.5px;font-family:var(--mono);text-align:center;line-height:1.9}
+  ::selection{background:rgba(138,42,32,.18)}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="kicker">est. by the puzzle-state facility</div>
+  <div class="mast">
+    <h1>The Bazaar</h1>
+    <div class="orn">✦ ❉ ✦</div>
+    <p class="tagline">A cabinet of ciphers and puzzles. Each one is a working tool you play
+      with in your browser — mechanism paired with its story, graded so you climb at your own pace.</p>
+    <div class="priv">🔒 every puzzle runs entirely in your browser — nothing is sent anywhere</div>
+  </div>
+
+  <hr class="rule">
+
+  <!-- WHAT -->
+  <section>
+    <h2 class="sec">What this is</h2>
+    <p class="sec-sub">historical cryptography you learn by doing, not by reading</p>
+    <p class="lede dropcap">Most explanations of classic ciphers hand you a diagram and wish you
+      luck. The Bazaar hands you the <em>machine</em>. Every puzzle is a small interactive
+      workbench: encode and decode live, watch the mechanism move, then turn the same tools on a
+      real challenge and break it yourself. You leave actually understanding how a famous code
+      worked — and why it eventually fell.</p>
+  </section>
+
+  <hr class="rule">
+
+  <!-- WHY -->
+  <section>
+    <h2 class="sec">Why use it</h2>
+    <p class="sec-sub">for the curious, the puzzle-minded, and anyone learning security or history</p>
+    <div class="why">
+      <div class="feat"><div class="ic">⚙️</div><h3>Learn by operating</h3>
+        <p>Type into a live engine and see the cipher transform your words letter by letter. No setup, no install.</p></div>
+      <div class="feat"><div class="ic">🗝️</div><h3>Break it yourself</h3>
+        <p>Each puzzle ships the attacker’s real tools — frequency analysis and all — so you crack a challenge, not just read about one.</p></div>
+      <div class="feat"><div class="ic">📐</div><h3>A graded climb</h3>
+        <p>Puzzles are rated and meant to be taken in order. Each builds the intuition the next one needs.</p></div>
+      <div class="feat"><div class="ic">🔒</div><h3>Private by design</h3>
+        <p>Pure HTML in your browser. Nothing phones home; share links carry the puzzle, never your keys.</p></div>
+    </div>
+  </section>
+
+  <hr class="rule">
+
+  <!-- HOW / BEST USE -->
+  <section>
+    <h2 class="sec">How a puzzle works</h2>
+    <p class="sec-sub">the same four-station loop every time</p>
+    <div class="loop">
+      <div class="stepcell"><div class="n">1</div><h4>Learn</h4><p>A short read: how the cipher works and why it mattered.</p></div>
+      <div class="stepcell"><div class="n">2</div><h4>Play</h4><p>Drive the live engine — encode and decode your own messages.</p></div>
+      <div class="stepcell"><div class="n">3</div><h4>Analyze</h4><p>Use the attacker’s workbench to recover a key from ciphertext alone.</p></div>
+      <div class="stepcell"><div class="n">4</div><h4>Crack</h4><p>Solve the challenge and claim a flag — <span class="mono">CABINET{…}</span>.</p></div>
+    </div>
+
+    <div class="bestuse">
+      <h3>Best used like this</h3>
+      <ul>
+        <li><b>Give it ~20–30 minutes</b> and read top to bottom — the stations are a path, not a menu.</li>
+        <li><b>Actually type things in.</b> The engine is there to be poked; intuition comes from watching it move.</li>
+        <li><b>Climb from the gentlest grade up.</b> Start with Substitution and follow the ladder below; each cipher sets up the next.</li>
+        <li><b>Pen optional.</b> Everything’s in the browser, but a scrap of paper helps when you’re recovering a keyword by hand.</li>
+      </ul>
+    </div>
+  </section>
+
+  <hr class="rule">
+
+  <!-- COLLECTION -->
+  <section>
+    <h2 class="sec">The collection</h2>
+    <p class="sec-sub">four wings — ciphers, logic, hidden secrets, a modern lock — and a capstone meta</p>
+    <div class="roadmap">— the cipher wing —</div>
+
+    <a class="card" href="p/PUZ-0002-substitution/">
+      <div class="tags">cipher · substitution · <span class="num">№2</span></div>
+      <h3>Substitution &amp; the frequency fingerprint</h3>
+      <p>One scrambled alphabet, swapped letter for letter — and the letter-counting trick, a
+        thousand years old, that always gives it away. The gateway every codebreaker starts at.</p>
+      <div class="foot">
+        <span class="pill grade">beginner</span>
+        <span class="pill">⏱ 15–25 min</span>
+        <span class="pill learn">learn: frequency analysis</span>
+        <span class="open">open the cabinet →</span>
+      </div>
+    </a>
+
+    <a class="card" href="p/PUZ-0001-cipher-collection/">
+      <div class="tags">cipher · vigenère · <span class="num">№1</span></div>
+      <h3>The Vigenère cipher — <em>le chiffre indéchiffrable</em></h3>
+      <p>The code reckoned unbreakable for 300 years. Stack the shifts, then use the attacker’s own
+        tools — index of coincidence and column frequencies — to recover a key from thin air.</p>
+      <div class="foot">
+        <span class="pill grade">intermediate</span>
+        <span class="pill">⏱ 20–30 min</span>
+        <span class="pill learn">learn: polyalphabetic ciphers + key recovery</span>
+        <span class="open">open the cabinet →</span>
+      </div>
+    </a>
+
+    <a class="card" href="p/PUZ-0003-transposition/">
+      <div class="tags">cipher · transposition · <span class="num">№3</span></div>
+      <h3>The columnar transposition</h3>
+      <p>It changes the order, not the letters — so frequency counting is useless and the break is a
+        pure anagram. Cut the message into columns and slide them until the rows read.</p>
+      <div class="foot">
+        <span class="pill grade">intermediate</span>
+        <span class="pill">⏱ 20–30 min</span>
+        <span class="pill learn">learn: grid ciphers + anagram attacks</span>
+        <span class="open">open the cabinet →</span>
+      </div>
+    </a>
+
+    <a class="card" href="p/PUZ-0004-playfair/">
+      <div class="tags">cipher · playfair · <span class="num">№4</span></div>
+      <h3>The Playfair square</h3>
+      <p>The first cipher to encrypt letters in pairs, riding a 5×5 square into two world wars. It
+        flattens single-letter counts — so you break it with digraphs and a guessed keyword.</p>
+      <div class="foot">
+        <span class="pill grade">advanced</span>
+        <span class="pill">⏱ 25–35 min</span>
+        <span class="pill learn">learn: digraph substitution + crib attacks</span>
+        <span class="open">open the cabinet →</span>
+      </div>
+    </a>
+
+    <a class="card" href="p/PUZ-0005-rotor/">
+      <div class="tags">cipher · rotor machine · <span class="num">№5</span></div>
+      <h3>The rotor machine</h3>
+      <p>Geared wheels that rewire the alphabet with every keystroke — the cipher that ended the
+        pencil-and-paper era. Beat it the modern way: search all 105,456 settings in a second.</p>
+      <div class="foot">
+        <span class="pill grade">advanced</span>
+        <span class="pill">⏱ 25–35 min</span>
+        <span class="pill learn">learn: cipher machines + key-space search</span>
+        <span class="open">open the cabinet →</span>
+      </div>
+    </a>
+
+    <div class="roadmap">— the deduction wing —</div>
+
+    <a class="card" href="p/PUZ-0006-light-up/">
+      <div class="tags">logic · light up (akari) · <span class="num">№6</span></div>
+      <h3>Light Up — the lamplighter’s logic</h3>
+      <p>No cipher this time — pure deduction. Place lamps so every square is lit and no lamp shines
+        on another. A Nikoli classic, solvable by reasoning alone; solve it and the flag lights up.</p>
+      <div class="foot">
+        <span class="pill grade">beginner</span>
+        <span class="pill">⏱ 10–20 min</span>
+        <span class="pill learn">learn: constraint deduction</span>
+        <span class="open">open the cabinet →</span>
+      </div>
+    </a>
+
+    <a class="card" href="p/PUZ-0010-lights-out/">
+      <div class="tags">logic · lights out · <span class="num">№9</span></div>
+      <h3>Lights Out</h3>
+      <p>Every press flips a lamp and its four neighbours. Put the whole grid to dark — a tiny machine
+        of pure parity, solvable by “chasing the lights” with no guesswork.</p>
+      <div class="foot">
+        <span class="pill grade">beginner</span><span class="pill">⏱ 5–15 min</span>
+        <span class="pill learn">learn: parity / toggle logic</span><span class="open">open the cabinet →</span>
+      </div>
+    </a>
+
+    <a class="card" href="p/PUZ-0011-binairo/">
+      <div class="tags">logic · binairo (takuzu) · <span class="num">№10</span></div>
+      <h3>Binairo</h3>
+      <p>Fill the grid with 0s and 1s: no three in a line, balanced rows and columns, no two lines
+        alike. Sudoku stripped to two symbols and crisp, chainable deductions.</p>
+      <div class="foot">
+        <span class="pill grade">beginner</span><span class="pill">⏱ 10–15 min</span>
+        <span class="pill learn">learn: binary constraint logic</span><span class="open">open the cabinet →</span>
+      </div>
+    </a>
+
+    <a class="card" href="p/PUZ-0012-sudoku/">
+      <div class="tags">logic · sudoku · <span class="num">№11</span></div>
+      <h3>Sudoku</h3>
+      <p>The one everybody knows, and still the cleanest deduction puzzle ever printed. One of each
+        digit per row, column, and box — reachable by pure elimination, never a guess.</p>
+      <div class="foot">
+        <span class="pill grade">intermediate</span><span class="pill">⏱ 10–25 min</span>
+        <span class="pill learn">learn: constraint elimination</span><span class="open">open the cabinet →</span>
+      </div>
+    </a>
+
+    <a class="card" href="p/PUZ-0013-nonogram/">
+      <div class="tags">logic · nonogram (picross) · <span class="num">№12</span></div>
+      <h3>Nonogram</h3>
+      <p>Row and column run-length clues that, obeyed together, develop a hidden picture out of the
+        grid. Find the cell only one arrangement explains, and the image emerges from logic.</p>
+      <div class="foot">
+        <span class="pill grade">intermediate</span><span class="pill">⏱ 15–25 min</span>
+        <span class="pill learn">learn: line deduction</span><span class="open">open the cabinet →</span>
+      </div>
+    </a>
+
+    <a class="card" href="p/PUZ-0014-fill-a-pix/">
+      <div class="tags">logic · fill-a-pix (mosaic) · <span class="num">№13</span></div>
+      <h3>Fill-a-Pix</h3>
+      <p>Minesweeper in reverse: every number counts the filled cells in its 3×3 block. Obey them all
+        and a picture resolves out of the grid — pure overlapping-window deduction.</p>
+      <div class="foot">
+        <span class="pill grade">beginner</span><span class="pill">⏱ 15–20 min</span>
+        <span class="pill learn">learn: neighbourhood counting</span><span class="open">open the cabinet →</span>
+      </div>
+    </a>
+
+    <a class="card" href="p/PUZ-0015-skyscrapers/">
+      <div class="tags">logic · skyscrapers · <span class="num">№14</span></div>
+      <h3>Skyscrapers</h3>
+      <p>A Latin square of tower heights, with clues counting how many you can see from each edge —
+        taller towers hide shorter ones. The big clues pin the extremes; the rest is forced.</p>
+      <div class="foot">
+        <span class="pill grade">intermediate</span><span class="pill">⏱ 15–25 min</span>
+        <span class="pill learn">learn: visibility logic</span><span class="open">open the cabinet →</span>
+      </div>
+    </a>
+
+    <a class="card" href="p/PUZ-0016-numbrix/">
+      <div class="tags">logic · numbrix · <span class="num">№15</span></div>
+      <h3>Numbrix</h3>
+      <p>One snaking path of consecutive numbers fills the grid, each touching the next. Bridge the
+        givens — count the squares between them and the path almost draws itself.</p>
+      <div class="foot">
+        <span class="pill grade">intermediate</span><span class="pill">⏱ 10–20 min</span>
+        <span class="pill learn">learn: path / sequence logic</span><span class="open">open the cabinet →</span>
+      </div>
+    </a>
+
+    <a class="card" href="p/PUZ-0017-tents/">
+      <div class="tags">logic · tents &amp; trees · <span class="num">№16</span></div>
+      <h3>Tents &amp; Trees</h3>
+      <p>Pitch one tent beside every tree, none of them touching, matching the row and column counts.
+        A counting puzzle braided with a matching puzzle — each side unlocks the other.</p>
+      <div class="foot">
+        <span class="pill grade">intermediate</span><span class="pill">⏱ 15–25 min</span>
+        <span class="pill learn">learn: matching + counting</span><span class="open">open the cabinet →</span>
+      </div>
+    </a>
+
+    <a class="card" href="p/PUZ-0018-slitherlink/">
+      <div class="tags">logic · slitherlink · <span class="num">№17</span></div>
+      <h3>Slitherlink</h3>
+      <p>Draw one single closed loop along the grid lines; each number says how many of its four sides
+        the loop uses. Reasoning about edges and corners, where each clue is a tiny theorem.</p>
+      <div class="foot">
+        <span class="pill grade">advanced</span><span class="pill">⏱ 20–35 min</span>
+        <span class="pill learn">learn: loop logic</span><span class="open">open the cabinet →</span>
+      </div>
+    </a>
+
+    <div class="roadmap">— the capstone —</div>
+
+    <a class="card" href="p/PUZ-0007-meta-cabinet/">
+      <div class="tags">meta · the five keys · <span class="num">✦</span></div>
+      <h3>The Cabinet’s Answer</h3>
+      <p>The metapuzzle that binds the cipher wing. Five locked fragments, one per technique —
+        re-supply each rung’s key to open them, and the words you recover spell the cabinet’s final
+        secret. Solve all five rungs first; this is where they add up.</p>
+      <div class="foot">
+        <span class="pill grade">metapuzzle</span>
+        <span class="pill">⏱ 10–15 min</span>
+        <span class="pill learn">needs: all five cipher keys</span>
+        <span class="open">open the cabinet →</span>
+      </div>
+    </a>
+
+    <div class="roadmap">— the hidden drawer —</div>
+
+    <a class="card" href="p/PUZ-0008-steganography/">
+      <div class="tags">steganography · hidden in plain sight · <span class="num">№7</span></div>
+      <h3>Hidden in Plain Sight</h3>
+      <p>Not a cipher at all — the message is right there in an ordinary picture, tucked into bits
+        your eye can’t see. Hide one yourself, learn the trick that exposes one, then pull a flag out
+        of an innocent-looking image. Nothing leaves your browser.</p>
+      <div class="foot">
+        <span class="pill grade">beginner</span>
+        <span class="pill">⏱ 15–20 min</span>
+        <span class="pill learn">learn: LSB steganography + steganalysis</span>
+        <span class="open">open the cabinet →</span>
+      </div>
+    </a>
+
+    <div class="roadmap">— the modern lock —</div>
+
+    <a class="card" href="p/PUZ-0009-two-time-pad/">
+      <div class="tags">modern crypto · the two-time pad · <span class="num">№8</span></div>
+      <h3>The Two-Time Pad</h3>
+      <p>The one cipher proven <em>unbreakable</em> — so don’t attack the maths. Attack the operator
+        who reused the key. Crib-drag five intercepts sent under one keystream and watch a “perfect”
+        cipher fall to a human mistake. The lesson all modern security rests on.</p>
+      <div class="foot">
+        <span class="pill grade">advanced</span>
+        <span class="pill">⏱ 25–35 min</span>
+        <span class="pill learn">learn: secure-vs-solvable + key reuse</span>
+        <span class="open">open the cabinet →</span>
+      </div>
+    </a>
+  </section>
+
+  <footer>
+    The Bazaar · built with the puzzle-state facility<br>
+    pages run entirely in your browser, nothing is sent anywhere
+  </footer>
+</div>
+</body>
+</html>

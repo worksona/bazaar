@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Cabinet of Ciphers · №2 — Substitution</title>
+<style>
+  :root{
+    --paper:#efe6d2;--paper2:#e7dabd;--panel:#f3ecda;--edge:#d9c8a1;
+    --ink:#241f17;--ink-soft:#5a5142;--ink-faint:#8a7d66;
+    --rule:#cdbc96;--rule-soft:#dccfab;
+    --brass:#946312;--brass-bright:#b3832a;--ox:#8a2a20;--teal:#256b62;--good:#3c7a37;
+    --display:"Hoefler Text","Iowan Old Style","Palatino Linotype",Palatino,"Book Antiqua",Georgia,serif;
+    --body:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,"Times New Roman",serif;
+    --mono:ui-monospace,"SF Mono",SFMono-Regular,Menlo,Monaco,Consolas,monospace;
+    --shadow:0 1px 0 rgba(255,253,245,.7) inset,0 14px 30px -22px rgba(40,30,10,.6);
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{margin:0;color:var(--ink);font-family:var(--body);line-height:1.62;font-size:17px;
+    background:radial-gradient(120% 80% at 50% -10%,#f6efdd 0%,var(--paper) 55%,#e7dcc2 100%) fixed;}
+  body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:0;mix-blend-mode:multiply;opacity:.5;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.045'/%3E%3C/svg%3E");}
+  .wrap{position:relative;z-index:1;max-width:900px;margin:0 auto;padding:30px 22px 110px}
+  a{color:var(--teal)}
+  .back{font-family:var(--mono);font-size:12px;letter-spacing:.06em;text-transform:uppercase;text-decoration:none;color:var(--ink-faint)}
+  .back:hover{color:var(--brass)}
+  .kicker{font-family:var(--mono);font-size:11px;letter-spacing:.28em;text-transform:uppercase;color:var(--brass);margin:18px 0 8px}
+  header h1{font-family:var(--display);font-weight:600;font-size:clamp(30px,6vw,46px);line-height:1.05;margin:0 0 8px}
+  header h1 .no{color:var(--ox)}
+  .lede{font-size:18px;color:var(--ink-soft);font-style:italic;margin:0 0 14px;max-width:54ch}
+  .meta{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:6px}
+  .chip{font-family:var(--mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;border:1px solid var(--edge);background:var(--panel);border-radius:999px;padding:4px 12px;color:var(--ink-soft)}
+  .chip.grade{border-color:var(--brass);color:var(--brass)}.chip b{color:var(--ink)}
+  nav.path{position:sticky;top:0;z-index:5;margin:22px -22px 0;padding:10px 22px;background:linear-gradient(var(--paper),rgba(239,230,210,.86));backdrop-filter:blur(6px);border-bottom:1px solid var(--rule)}
+  nav.path ol{list-style:none;display:flex;gap:6px;margin:0;padding:0;flex-wrap:wrap;font-family:var(--mono);font-size:11.5px;letter-spacing:.04em;text-transform:uppercase}
+  nav.path a{display:flex;align-items:center;gap:8px;text-decoration:none;color:var(--ink-faint);padding:6px 11px;border-radius:8px;border:1px solid transparent}
+  nav.path a .n{width:19px;height:19px;border-radius:50%;border:1px solid var(--edge);display:grid;place-items:center;font-size:10px;color:var(--ink-soft)}
+  nav.path a:hover{color:var(--ink);background:#f7f0de}
+  nav.path a.active{color:var(--ox);border-color:var(--rule);background:#f7efdb}
+  nav.path a.active .n{border-color:var(--ox);background:var(--ox);color:#fbf3e3}
+  .step{position:relative;background:var(--panel);border:1px solid var(--edge);border-radius:14px;padding:26px 26px 24px;margin:26px 0;box-shadow:var(--shadow)}
+  .step::after{content:"";position:absolute;inset:6px;border:1px solid var(--rule-soft);border-radius:9px;pointer-events:none}
+  .step>*{position:relative}
+  .step-head{display:flex;align-items:baseline;gap:14px;margin:0 0 4px}
+  .medallion{flex:none;width:34px;height:34px;border-radius:50%;display:grid;place-items:center;font-family:var(--mono);font-size:14px;font-weight:700;color:#fbf3e3;background:var(--brass);box-shadow:0 0 0 3px #f3ecda,0 0 0 4px var(--brass)}
+  .step.teal .medallion{background:var(--teal);box-shadow:0 0 0 3px #f3ecda,0 0 0 4px var(--teal)}
+  .step.ox .medallion{background:var(--ox);box-shadow:0 0 0 3px #f3ecda,0 0 0 4px var(--ox)}
+  .step h2{font-family:var(--display);font-weight:600;font-size:25px;margin:0}
+  .tagline{color:var(--ink-soft);font-style:italic;margin:2px 0 18px;font-size:15.5px}
+  h3{font-family:var(--mono);font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--teal);margin:22px 0 8px}
+  .step.ox h3{color:var(--ox)}
+  p{margin:0 0 12px}
+  .dropcap::first-letter{float:left;font-family:var(--display);font-size:58px;line-height:.78;font-weight:600;padding:6px 10px 0 0;color:var(--ox)}
+  .example{font-family:var(--mono);font-size:13px;background:#fbf4e2;border:1px solid var(--edge);border-radius:10px;padding:14px 16px;overflow:auto;color:var(--ink-soft)}
+  .example b{color:var(--ink)} .example .lab{color:var(--brass);display:inline-block;width:64px} .example .ci{color:var(--teal)}
+  label{display:block;font-family:var(--mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-faint);margin:14px 0 5px}
+  textarea,input[type=text]{width:100%;background:#fbf4e2;color:var(--ink);border:1px solid var(--edge);border-radius:9px;padding:11px 12px;font-family:var(--mono);font-size:14px;line-height:1.5}
+  textarea{min-height:88px;resize:vertical}
+  input[type=text]:focus,textarea:focus{outline:none;border-color:var(--brass);box-shadow:0 0 0 3px rgba(148,99,18,.14)}
+  .row{display:flex;gap:18px;flex-wrap:wrap}.row>div{flex:1;min-width:250px}
+  .controls{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin:14px 0 0}
+  .btn{font-family:var(--mono);font-size:12px;letter-spacing:.06em;font-weight:700;cursor:pointer;border-radius:9px;padding:10px 15px;border:1px solid transparent;transition:transform .06s,filter .15s}
+  .btn:active{transform:translateY(1px)}
+  .btn--brass{background:var(--brass);color:#fbf3e3}.btn--brass:hover{filter:brightness(1.08)}
+  .btn--ox{background:var(--ox);color:#fbf3e3}.btn--ox:hover{filter:brightness(1.08)}
+  .btn--teal{background:var(--teal);color:#fbf3e3}.btn--teal:hover{filter:brightness(1.08)}
+  .btn--ghost{background:transparent;border-color:var(--edge);color:var(--ink-soft)}.btn--ghost:hover{border-color:var(--brass);color:var(--brass)}
+  .seg{display:inline-flex;border:1px solid var(--edge);border-radius:9px;overflow:hidden;background:#fbf4e2}
+  .seg button{font-family:var(--mono);font-size:12px;letter-spacing:.06em;background:transparent;border:0;color:var(--ink-faint);padding:9px 16px;cursor:pointer}
+  .seg button.on{background:var(--teal);color:#fbf3e3;font-weight:700}
+  .hint{color:var(--ink-faint);font-size:13px;font-style:italic} .mono{font-family:var(--mono)}
+  .out{white-space:pre-wrap;word-break:break-word;background:#fbf4e2;border:1px solid var(--edge);border-radius:9px;padding:12px;font-family:var(--mono);font-size:14px;min-height:48px}
+  .maprow{font-family:var(--mono);font-size:13px;overflow:auto;background:#fbf4e2;border:1px dashed var(--edge);border-radius:9px;padding:10px 12px;white-space:pre;color:var(--ink-soft);margin-top:10px}
+  .maprow b{color:var(--ox)}
+  details{margin-top:14px;border-top:1px solid var(--rule-soft);padding-top:10px}
+  details summary{cursor:pointer;font-family:var(--mono);font-size:12px;letter-spacing:.06em;color:var(--teal);list-style:none}
+  details summary::-webkit-details-marker{display:none}
+  details summary::before{content:"▸ ";color:var(--brass)} details[open] summary::before{content:"▾ "}
+  .callout{display:flex;gap:12px;align-items:flex-start;background:#fbf4e2;border:1px solid var(--edge);border-left:4px solid var(--teal);border-radius:9px;padding:13px 15px;margin-top:14px;font-size:15px}
+  .callout .big{font-family:var(--display);font-size:30px;line-height:1;color:var(--teal);font-weight:700}
+  /* frequency chart */
+  .freqchart{display:flex;align-items:flex-end;gap:3px;height:120px;margin-top:8px;border-bottom:1px solid var(--rule)}
+  .fb{flex:1;position:relative;display:flex;flex-direction:column;justify-content:flex-end;align-items:center}
+  .fb .ct{width:70%;background:var(--teal);opacity:.55;border-radius:2px 2px 0 0;min-height:2px}
+  .fb .en{position:absolute;width:100%;border-top:2px dashed var(--ox);opacity:.6}
+  .fb .let{font-family:var(--mono);font-size:10px;color:var(--ink-faint);margin-top:3px}
+  /* substitution solver grid */
+  .solver{display:grid;grid-template-columns:repeat(auto-fill,minmax(58px,1fr));gap:7px;margin-top:12px}
+  .cell{background:#fbf4e2;border:1px solid var(--edge);border-radius:8px;padding:6px 4px;text-align:center}
+  .cell .cl{font-family:var(--mono);font-size:15px;font-weight:700;color:var(--ink)}
+  .cell .cn{font-family:var(--mono);font-size:9px;color:var(--ink-faint)}
+  .cell input{width:30px;text-align:center;text-transform:uppercase;padding:3px 0;font-size:14px;margin-top:3px;color:var(--ox);font-weight:700}
+  .preview{white-space:pre-wrap;word-break:break-word;background:#fbf4e2;border:1px solid var(--edge);border-radius:9px;padding:12px;font-family:var(--mono);font-size:14px;line-height:1.7;margin-top:12px}
+  .preview b{color:var(--ox);font-weight:700}
+  /* challenge */
+  .quay{background:#fbf4e2;border:1px solid var(--edge);border-radius:10px;padding:16px;font-family:var(--mono);font-size:13.5px;line-height:1.7;white-space:pre-wrap;word-break:break-word;color:var(--ink-soft);box-shadow:inset 0 0 40px -28px rgba(40,30,10,.8)}
+  ol.checklist{margin:6px 0 0;padding-left:0;list-style:none;counter-reset:c}
+  ol.checklist li{counter-increment:c;position:relative;padding:5px 0 5px 34px;font-size:15px}
+  ol.checklist li::before{content:counter(c);position:absolute;left:0;top:4px;width:22px;height:22px;border-radius:50%;background:var(--brass);color:#fbf3e3;font-family:var(--mono);font-size:11px;display:grid;place-items:center}
+  .flagbox{display:flex;gap:10px;flex-wrap:wrap;align-items:stretch;margin-top:8px}
+  .flagbox input{flex:1;min-width:240px}
+  .verdict{margin-top:12px;font-family:var(--mono);font-size:14px;min-height:22px}
+  .verdict.ok{color:var(--good)}.verdict.no{color:var(--ox)}
+  .seal{display:none;align-items:center;gap:14px;margin-top:14px;animation:pop .5s ease both}.seal.show{display:flex}
+  .seal .wax{width:62px;height:62px;flex:none;border-radius:50%;background:radial-gradient(circle at 38% 34%,#c0432f,var(--ox) 60%,#6e1f17);color:#f3d9c8;display:grid;place-items:center;font-family:var(--display);font-weight:700;font-size:13px;letter-spacing:.05em;box-shadow:0 6px 16px -8px rgba(110,31,23,.8),inset 0 2px 4px rgba(255,255,255,.25);transform:rotate(-7deg)}
+  .seal .msg b{font-family:var(--display);font-size:20px;color:var(--ox)}
+  @keyframes pop{0%{transform:scale(.7);opacity:0}60%{transform:scale(1.06)}100%{transform:scale(1);opacity:1}}
+  footer{margin-top:40px;color:var(--ink-faint);font-size:12.5px;font-family:var(--mono);text-align:center;line-height:1.8}
+  .priv{display:inline-block;border:1px solid var(--edge);border-radius:999px;padding:4px 12px;margin-bottom:8px}
+  ::selection{background:rgba(138,42,32,.18)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <a class="back" href="../../">← back to The Bazaar</a>
+  <div class="kicker">The Bazaar · Cabinet of Ciphers · №2</div>
+  <header>
+    <h1>The <span class="no">Substitution</span> Cipher</h1>
+    <p class="lede">One scrambled alphabet, swapped letter for letter — and the simple
+      letter-counting trick that has undone it for a thousand years.</p>
+    <div class="meta">
+      <span class="chip grade">difficulty · beginner</span>
+      <span class="chip">⏱ <b>15–25 min</b></span>
+      <span class="chip">you’ll learn <b>frequency analysis</b></span>
+    </div>
+  </header>
+
+  <nav class="path" aria-label="steps">
+    <ol>
+      <li><a href="#s1"><span class="n">1</span> Learn</a></li>
+      <li><a href="#s2"><span class="n">2</span> Encode / Decode</a></li>
+      <li><a href="#s3"><span class="n">3</span> Analyze</a></li>
+      <li><a href="#s4"><span class="n">4</span> Crack the challenge</a></li>
+    </ol>
+  </nav>
+
+  <p class="hint" style="margin-top:18px">New here? Read top to bottom — each station builds on the
+    one before, and the last hands you a flag.</p>
+
+  <!-- STEP 1 -->
+  <section class="step" id="s1">
+    <div class="step-head"><span class="medallion">1</span><h2>Learn — one alphabet, shuffled</h2></div>
+    <p class="tagline">The whole cipher is a single fixed swap-table. Its weakness is just as simple.</p>
+    <p class="dropcap"><b>A monoalphabetic substitution cipher</b> replaces every letter with another,
+      using one scrambled alphabet that never changes. A→Q, B→W, and so on. Unlike a Caesar shift
+      it isn’t just a rotation — the substitute alphabet can be any of the 403,291,461,126,605,635,584,000,000
+      possible orderings, far too many to try one by one.</p>
+    <div class="example" aria-hidden="true">
+<span class="lab">plain</span>A B C D E F G H I J K L M N O P Q R S T U V W X Y Z
+<span class="lab ci">cipher</span><span class="ci">N I G H T W A C B D E F J K L M O P Q R S U V X Y Z</span>
+    </div>
+    <h3>Why it still falls</h3>
+    <p>Each plaintext letter <em>always</em> becomes the same cipher letter — so the cipher keeps
+      the language’s fingerprint. In English, <b>E</b> is far and away the most common letter,
+      followed by T, A, O, I, N. Count the letters in a substitution ciphertext, match the tall bars
+      to that ranking, lean on little words (<span class="mono">the</span>, <span class="mono">and</span>)
+      and doubled letters, and the alphabet rebuilds itself. The Arab scholar al-Kindi wrote this
+      attack down in the 9th century. It is the oldest break in the book — and Station 3 lets you run it.</p>
+    <div class="callout"><span class="big">“</span><div><b>Best use today:</b> a substitution cipher
+      is a fine toy and a terrible secret. It’s the gateway every codebreaker starts at — learn to
+      feel the letter counts here and every later cipher gets easier.</div></div>
+  </section>
+
+  <!-- STEP 2 -->
+  <section class="step teal" id="s2">
+    <div class="step-head"><span class="medallion">2</span><h2>Encode &amp; Decode — the engine</h2></div>
+    <p class="tagline">A keyword seeds the scrambled alphabet: its letters first, then the rest in order.</p>
+    <div class="controls" style="margin-top:0">
+      <span class="seg" id="mode"><button data-mode="encode" class="on">encode →</button><button data-mode="decode">decode ←</button></span>
+      <span class="hint">change the keyword to reshuffle the whole alphabet</span>
+    </div>
+    <label for="key">keyword</label>
+    <input id="key" type="text" value="NIGHTWATCH" autocomplete="off" spellcheck="false">
+    <div class="maprow" id="maprow"></div>
+    <div class="row">
+      <div><label for="inp">message in</label><textarea id="inp" spellcheck="false">Meet me by the old harbor wall at dusk.</textarea></div>
+      <div><label for="outp">result out</label><div id="outp" class="out mono"></div></div>
+    </div>
+    <div class="controls"><button id="swap" class="btn btn--ghost">↺ use result as input</button></div>
+  </section>
+
+  <!-- STEP 3 -->
+  <section class="step ox" id="s3">
+    <div class="step-head"><span class="medallion">3</span><h2>Analyze — the letter-counter’s workbench</h2></div>
+    <p class="tagline">No keyword? Count letters, guess the common ones, and read the rest into place.</p>
+    <label for="ct">ciphertext under attack</label>
+    <textarea id="ct" spellcheck="false" placeholder="paste a ciphertext — or load the challenge from Station 4"></textarea>
+    <div class="controls" style="margin-top:6px"><button id="count" class="btn btn--ox">count the letters →</button></div>
+
+    <h3>letter frequency · ciphertext bars vs English (dashed)</h3>
+    <div class="freqchart" id="freqchart"></div>
+
+    <h3>build the alphabet — type your guesses</h3>
+    <p class="hint" style="font-style:normal">Each box is a cipher letter and its count. Type the
+      plaintext letter you think it stands for; the preview updates live. Start with the tallest bars
+      ≈ E, T, A, O. Use <b>“seed by frequency”</b> for a rough first pass, then fix it by eye.</p>
+    <div class="controls" style="margin-top:6px">
+      <button id="seed" class="btn btn--teal">seed by frequency</button>
+      <button id="clearmap" class="btn btn--ghost">clear guesses</button>
+    </div>
+    <div class="solver" id="solver"></div>
+    <h3>plaintext so far</h3>
+    <div class="preview" id="preview">—</div>
+  </section>
+
+  <!-- STEP 4 -->
+  <section class="step ox" id="s4">
+    <div class="step-head"><span class="medallion">4</span><h2>Crack the challenge</h2></div>
+    <p class="tagline">A page torn from a shopkeeper’s second ledger. One alphabet. No key.</p>
+    <div class="quay" id="challenge"></div>
+    <div class="controls"><button id="loadchal" class="btn btn--ox">load it into the workbench →</button>
+      <span class="hint">sends this text to Station 3 and counts it for you</span></div>
+    <h3>How to crack it</h3>
+    <ol class="checklist">
+      <li><b>Load</b> the ledger into the workbench (button above).</li>
+      <li>Hit <b>count the letters</b>, then <b>seed by frequency</b> for a rough draft.</li>
+      <li>Fix guesses by eye — chase the small words and doubled letters until it reads as English.</li>
+      <li>The last line is a flag shaped like <span class="mono">CABINET{…}</span>. Paste it below.</li>
+    </ol>
+    <label for="flag">enter the flag</label>
+    <div class="flagbox"><input id="flag" type="text" autocomplete="off" spellcheck="false" placeholder="CABINET{...}"><button id="checkflag" class="btn btn--ox">seal it ✓</button></div>
+    <div class="verdict" id="verdict"></div>
+    <div class="seal" id="seal"><div class="wax">SOLVED</div><div class="msg"><b>The ledger speaks.</b><br><span class="hint" style="font-style:normal">№2 complete — you ran the oldest break in cryptography.</span></div></div>
+    <details><summary>stuck? reveal the keyword (spoiler)</summary>
+      <p class="hint" style="margin:10px 0 0">The keyword is <b class="mono" style="color:var(--ox)">NIGHTWATCH</b>.
+        Enter it at Station 2, switch to <b>decode</b>, and paste the challenge as the message.</p></details>
+  </section>
+
+  <footer>
+    <span class="priv">🔒 runs entirely in your browser — nothing is sent anywhere</span><br>
+    The Cabinet of Ciphers · a graded collection · <a href="../PUZ-0001-cipher-collection/">next: №1 Vigenère →</a>
+  </footer>
+</div>
+
+<script>
+const A=65, $=id=>document.getElementById(id);
+const ENORDER="ETAOINSHRDLCUMWFGYPBVKJXQZ";
+const EN=[8.2,1.5,2.8,4.3,12.7,2.2,2.0,6.1,7.0,0.15,0.77,4.0,2.4,6.7,7.5,1.9,0.095,6.0,6.3,9.1,2.8,0.98,2.4,0.15,2.0,0.074];
+function subAlphabet(keyword){let seen="",k=keyword.toUpperCase().replace(/[^A-Z]/g,"");for(const c of k)if(!seen.includes(c))seen+=c;for(let i=0;i<26;i++){const c=String.fromCharCode(A+i);if(!seen.includes(c))seen+=c;}return seen;}
+function subEnc(t,kw){const ca=subAlphabet(kw);let o="";for(const ch of t){if(ch>='A'&&ch<='Z')o+=ca[ch.charCodeAt(0)-A];else if(ch>='a'&&ch<='z')o+=ca[ch.charCodeAt(0)-97].toLowerCase();else o+=ch;}return o;}
+function subDec(t,kw){const ca=subAlphabet(kw);let o="";for(const ch of t){const U=ch.toUpperCase();const i=ca.indexOf(U);if(i>=0){const p=String.fromCharCode(A+i);o+=(ch>='a'&&ch<='z')?p.toLowerCase():p;}else o+=ch;}return o;}
+
+/* engine */
+let mode="encode";
+$("mode").querySelectorAll("button").forEach(b=>b.onclick=()=>{mode=b.dataset.mode;$("mode").querySelectorAll("button").forEach(x=>x.classList.toggle("on",x===b));run();});
+function run(){
+  const kw=$("key").value;
+  $("outp").textContent=(mode==="decode"?subDec:subEnc)($("inp").value,kw);
+  const ca=subAlphabet(kw);
+  let pl="plain  ",ci="cipher ";
+  for(let i=0;i<26;i++){pl+=String.fromCharCode(A+i)+" ";ci+="<b>"+ca[i]+"</b> ";}
+  $("maprow").innerHTML=`<div>${pl}</div><div>${ci}</div>`;
+}
+$("inp").oninput=run;$("key").oninput=run;
+$("swap").onclick=()=>{$("inp").value=$("outp").textContent;run();};
+
+/* attacker */
+let counts=new Array(26).fill(0), guess={};
+function recount(){const s=$("ct").value.toUpperCase().replace(/[^A-Z]/g,"");counts=new Array(26).fill(0);for(const c of s)counts[c.charCodeAt(0)-A]++;}
+$("count").onclick=()=>{recount();drawFreq();buildSolver();updatePreview();};
+function drawFreq(){
+  const max=Math.max(1,...counts), total=counts.reduce((a,b)=>a+b,0)||1;
+  let h="";
+  for(let i=0;i<26;i++){
+    const ch=String.fromCharCode(A+i);
+    const cth=Math.round(counts[i]/max*100);
+    const enh=Math.round((EN[i]/12.7)*100);
+    h+=`<div class="fb"><div class="en" style="bottom:${enh}%"></div><div class="ct" style="height:${cth}%"></div><div class="let">${ch}</div></div>`;
+  }
+  $("freqchart").innerHTML=h;
+}
+function buildSolver(){
+  const order=[...Array(26).keys()].sort((a,b)=>counts[b]-counts[a]);
+  let h="";
+  for(const i of order){
+    const ch=String.fromCharCode(A+i);
+    h+=`<div class="cell"><div class="cl">${ch}</div><div class="cn">×${counts[i]}</div><input data-c="${ch}" maxlength="1" value="${guess[ch]||''}"></div>`;
+  }
+  $("solver").innerHTML=h;
+  $("solver").querySelectorAll("input").forEach(inp=>inp.oninput=()=>{
+    const c=inp.dataset.c, v=inp.value.toUpperCase().replace(/[^A-Z]/g,"");
+    inp.value=v; if(v)guess[c]=v; else delete guess[c]; updatePreview();
+  });
+}
+$("seed").onclick=()=>{
+  const order=[...Array(26).keys()].filter(i=>counts[i]>0).sort((a,b)=>counts[b]-counts[a]);
+  guess={};
+  order.forEach((i,rank)=>{ if(rank<ENORDER.length) guess[String.fromCharCode(A+i)]=ENORDER[rank]; });
+  buildSolver(); updatePreview();
+};
+$("clearmap").onclick=()=>{guess={};buildSolver();updatePreview();};
+function updatePreview(){
+  const s=$("ct").value; let h="";
+  for(const ch of s){
+    const U=ch.toUpperCase();
+    if(U>='A'&&U<='Z'){ const g=guess[U]; h+= g?`<b>${g}</b>`:`<span style="color:var(--ink-faint)">${ch.toLowerCase()}</span>`; }
+    else h+=ch.replace(/[<>&]/g,m=>({'<':'&lt;','>':'&gt;','&':'&amp;'}[m]));
+  }
+  $("preview").innerHTML=h||"—";
+}
+
+/* challenge */
+const CHALLENGE="Bk rct lfh cnpilp tngc qclm etmr rvl fthatpq, lkt wlp glbk nkh lkt wlp qtgptrq, nkh rct qtglkh vnq vpbrrtk bk n qbkaft rbfrth nfmcnitr rcnr ktutp gcnkath wplj mnat rl mnat. N gftpe vcl glskrth ftrrtpq glsfh wttf rct fnkasnat skhtpktnrc, wlp rct jlqr gljjlk jnpe vnq qsptfy T nkh rct fbrrft vlphq anut rctjqtfutq nvny. Ptnh rct glskrq, ptisbfh rct nfmcnitr, nkh rct fthatp qmtneq. Rct gflqbka fbkt lw rcbq lkt ptnhq: GNIBKTR{ftrrtpq_cnut_wbkatpmpbkrq}";
+$("challenge").textContent=CHALLENGE;
+$("loadchal").onclick=()=>{$("ct").value=CHALLENGE;recount();drawFreq();buildSolver();updatePreview();window.scrollTo({top:$("s3").getBoundingClientRect().top+window.scrollY-60,behavior:"smooth"});};
+
+/* flag */
+const FLAG_HASH="be2d0cd60c37bd4e69a33d4cc97d0c1dd6e002f3040ebaa0c14d0522935eab19";
+async function sha256(str){const b=await crypto.subtle.digest("SHA-256",new TextEncoder().encode(str));return [...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,"0")).join("");}
+const norm=s=>s.toLowerCase().replace(/[^a-z0-9]/g,"");
+$("checkflag").onclick=async()=>{
+  const raw=$("flag").value.trim(),v=$("verdict");
+  if(!raw){v.className="verdict no";v.textContent="type or paste the flag first.";return;}
+  const h=await sha256(norm(raw));
+  if(h===FLAG_HASH){v.className="verdict ok";v.textContent="✓ correct.";$("seal").classList.add("show");$("seal").scrollIntoView({behavior:"smooth",block:"center"});}
+  else{v.className="verdict no";v.textContent=/cabinet/i.test(raw)?"close — right shape, wrong contents. Keep refining the alphabet.":"not yet — the flag looks like CABINET{...}. Finish the decode.";$("seal").classList.remove("show");}
+};
+$("flag").addEventListener("keydown",e=>{if(e.key==="Enter")$("checkflag").click();});
+
+/* scrollspy */
+(function(){const links=[...document.querySelectorAll('nav.path a')];const map={};links.forEach(a=>map[a.getAttribute('href').slice(1)]=a);
+  const obs=new IntersectionObserver(es=>{es.forEach(e=>{if(e.isIntersecting){links.forEach(l=>l.classList.remove('active'));map[e.target.id]&&map[e.target.id].classList.add('active');}});},{rootMargin:"-45% 0px -50% 0px"});
+  ["s1","s2","s3","s4"].forEach(id=>obs.observe($(id)));})();
+run();
+</script>
+</body>
+</html>

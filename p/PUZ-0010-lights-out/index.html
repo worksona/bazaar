@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Lamplighter’s Logic · №9 — Lights Out</title>
+<style>
+  :root{--paper:#efe6d2;--panel:#f3ecda;--edge:#d9c8a1;--ink:#241f17;--ink-soft:#5a5142;--ink-faint:#8a7d66;
+    --rule:#cdbc96;--rule-soft:#dccfab;--brass:#946312;--ox:#8a2a20;--teal:#256b62;--good:#3c7a37;--glow:#f4c64e;
+    --display:"Hoefler Text","Iowan Old Style","Palatino Linotype",Palatino,"Book Antiqua",Georgia,serif;
+    --body:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,serif;--mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+    --shadow:0 1px 0 rgba(255,253,245,.7) inset,0 14px 30px -22px rgba(40,30,10,.6);}
+  *{box-sizing:border-box}html{scroll-behavior:smooth}
+  body{margin:0;color:var(--ink);font-family:var(--body);line-height:1.62;font-size:17px;background:radial-gradient(120% 80% at 50% -10%,#f6efdd 0%,var(--paper) 55%,#e7dcc2 100%) fixed;}
+  body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:0;mix-blend-mode:multiply;opacity:.5;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.045'/%3E%3C/svg%3E");}
+  .wrap{position:relative;z-index:1;max-width:760px;margin:0 auto;padding:30px 22px 110px}
+  a{color:var(--teal)}.back{font-family:var(--mono);font-size:12px;letter-spacing:.06em;text-transform:uppercase;text-decoration:none;color:var(--ink-faint)}.back:hover{color:var(--brass)}
+  .kicker{font-family:var(--mono);font-size:11px;letter-spacing:.28em;text-transform:uppercase;color:var(--brass);margin:18px 0 8px}
+  header h1{font-family:var(--display);font-weight:600;font-size:clamp(30px,6vw,44px);line-height:1.05;margin:0 0 8px}header h1 .no{color:var(--ox)}
+  .lede{font-size:18px;color:var(--ink-soft);font-style:italic;margin:0 0 14px;max-width:54ch}
+  .meta{display:flex;gap:10px;flex-wrap:wrap;margin-top:6px}
+  .chip{font-family:var(--mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;border:1px solid var(--edge);background:var(--panel);border-radius:999px;padding:4px 12px;color:var(--ink-soft)}
+  .chip.grade{border-color:var(--brass);color:var(--brass)}.chip b{color:var(--ink)}
+  nav.path{position:sticky;top:0;z-index:5;margin:22px -22px 0;padding:10px 22px;background:linear-gradient(var(--paper),rgba(239,230,210,.86));backdrop-filter:blur(6px);border-bottom:1px solid var(--rule)}
+  nav.path ol{list-style:none;display:flex;gap:6px;margin:0;padding:0;flex-wrap:wrap;font-family:var(--mono);font-size:11.5px;letter-spacing:.04em;text-transform:uppercase}
+  nav.path a{display:flex;align-items:center;gap:8px;text-decoration:none;color:var(--ink-faint);padding:6px 11px;border-radius:8px;border:1px solid transparent}
+  nav.path a .n{width:19px;height:19px;border-radius:50%;border:1px solid var(--edge);display:grid;place-items:center;font-size:10px}
+  nav.path a:hover{color:var(--ink);background:#f7f0de}nav.path a.active{color:var(--ox);border-color:var(--rule);background:#f7efdb}
+  nav.path a.active .n{border-color:var(--ox);background:var(--ox);color:#fbf3e3}
+  .step{position:relative;background:var(--panel);border:1px solid var(--edge);border-radius:14px;padding:26px 26px 24px;margin:26px 0;box-shadow:var(--shadow)}
+  .step::after{content:"";position:absolute;inset:6px;border:1px solid var(--rule-soft);border-radius:9px;pointer-events:none}.step>*{position:relative}
+  .step-head{display:flex;align-items:baseline;gap:14px;margin:0 0 4px}
+  .medallion{flex:none;width:34px;height:34px;border-radius:50%;display:grid;place-items:center;font-family:var(--mono);font-size:14px;font-weight:700;color:#fbf3e3;background:var(--brass);box-shadow:0 0 0 3px var(--panel),0 0 0 4px var(--brass)}
+  .step.teal .medallion{background:var(--teal);box-shadow:0 0 0 3px var(--panel),0 0 0 4px var(--teal)}
+  .step.ox .medallion{background:var(--ox);box-shadow:0 0 0 3px var(--panel),0 0 0 4px var(--ox)}
+  .step h2{font-family:var(--display);font-weight:600;font-size:24px;margin:0}
+  .tagline{color:var(--ink-soft);font-style:italic;margin:2px 0 18px;font-size:15.5px}
+  h3{font-family:var(--mono);font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--teal);margin:20px 0 8px}.step.ox h3{color:var(--ox)}
+  p{margin:0 0 12px}.dropcap::first-letter{float:left;font-family:var(--display);font-size:56px;line-height:.78;font-weight:600;padding:6px 10px 0 0;color:var(--ox)}
+  .hint{color:var(--ink-faint);font-size:13px;font-style:italic}.mono{font-family:var(--mono)}
+  .btn{font-family:var(--mono);font-size:12px;letter-spacing:.06em;font-weight:700;cursor:pointer;border-radius:9px;padding:10px 15px;border:1px solid var(--edge);background:transparent;color:var(--ink-soft)}.btn:hover{border-color:var(--brass);color:var(--brass)}
+  .controls{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin:14px 0 0}
+  .callout{display:flex;gap:12px;align-items:flex-start;background:#fbf4e2;border:1px solid var(--edge);border-left:4px solid var(--teal);border-radius:9px;padding:13px 15px;margin-top:14px;font-size:15px}.callout .big{font-family:var(--display);font-size:30px;line-height:1;color:var(--teal);font-weight:700}
+  .board{display:grid;gap:8px;width:max-content;margin:6px auto 0;padding:12px;background:#2a2018;border:1px solid #15100b;border-radius:12px}
+  .cell{width:58px;height:58px;border-radius:10px;cursor:pointer;border:1px solid #15100b;background:#1c150e;transition:background .12s,box-shadow .12s}
+  .cell.on{background:radial-gradient(circle at 50% 40%,#ffe89a,var(--glow) 70%);box-shadow:0 0 16px -2px var(--glow),inset 0 1px 2px rgba(255,255,255,.5)}
+  .cell:hover{box-shadow:0 0 0 2px var(--brass)}
+  .status{font-family:var(--mono);font-size:13px;color:var(--ink-soft);margin-top:14px;text-align:center}.status b{color:var(--ink)}.status .done{color:var(--good)}
+  .seal{display:none;align-items:center;gap:14px;margin-top:16px;animation:pop .5s ease both}.seal.show{display:flex}
+  .seal .wax{width:62px;height:62px;flex:none;border-radius:50%;background:radial-gradient(circle at 38% 34%,#c0432f,var(--ox) 60%,#6e1f17);color:#f3d9c8;display:grid;place-items:center;font-family:var(--display);font-weight:700;font-size:13px;box-shadow:0 6px 16px -8px rgba(110,31,23,.8);transform:rotate(-7deg)}
+  .seal .msg b{font-family:var(--display);font-size:20px;color:var(--ox)}
+  .flagline{font-family:var(--mono);font-size:15px;color:var(--ox);background:#f7efda;border:1px solid var(--brass);border-radius:8px;padding:8px 12px;display:inline-block;margin-top:8px}
+  @keyframes pop{0%{transform:scale(.7);opacity:0}60%{transform:scale(1.06)}100%{transform:scale(1)}}
+  details{margin-top:14px;border-top:1px solid var(--rule-soft);padding-top:10px}details summary{cursor:pointer;font-family:var(--mono);font-size:12px;color:var(--teal);list-style:none}details summary::-webkit-details-marker{display:none}details summary::before{content:"▸ ";color:var(--brass)}details[open] summary::before{content:"▾ "}
+  footer{margin-top:40px;color:var(--ink-faint);font-size:12.5px;font-family:var(--mono);text-align:center;line-height:1.8}.priv{display:inline-block;border:1px solid var(--edge);border-radius:999px;padding:4px 12px;margin-bottom:8px}
+  ::selection{background:rgba(138,42,32,.18)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <a class="back" href="../../">← back to The Bazaar</a>
+  <div class="kicker">The Bazaar · The Lamplighter’s Logic · №9</div>
+  <header>
+    <h1>Lights <span class="no">Out</span></h1>
+    <p class="lede">Every press flips a lamp and its four neighbours. Put the whole grid to dark —
+      a tiny machine of pure parity, solvable without a single guess.</p>
+    <div class="meta"><span class="chip grade">difficulty · beginner</span><span class="chip">⏱ <b>5–15 min</b></span><span class="chip">you’ll learn <b>parity / toggle logic</b></span></div>
+  </header>
+  <nav class="path"><ol>
+    <li><a href="#s1"><span class="n">1</span> Learn</a></li>
+    <li><a href="#s2"><span class="n">2</span> Technique</a></li>
+    <li><a href="#s3"><span class="n">3</span> Solve</a></li>
+  </ol></nav>
+
+  <section class="step" id="s1">
+    <div class="step-head"><span class="medallion">1</span><h2>Learn — one switch, five lamps</h2></div>
+    <p class="tagline">Press any lamp and it toggles, along with the lamps above, below, left, and right.</p>
+    <p class="dropcap"><b>The board starts</b> with some lamps lit. Each press flips a plus-shaped set
+      of five — the lamp you touch and its orthogonal neighbours (edges and corners just flip fewer).
+      The goal is simple: turn <em>every</em> lamp off at once. It sounds fiddly because each press
+      undoes some of your work — but there’s an order that never fails.</p>
+    <div class="callout"><span class="big">“</span><div><b>Why it belongs here:</b> Lights Out is
+      linear algebra in disguise — every solution is a set of presses over “on/off” arithmetic. Pressing
+      a lamp twice cancels out, so only <em>which</em> lamps you press matters, never the order.</div></div>
+  </section>
+
+  <section class="step teal" id="s2">
+    <div class="step-head"><span class="medallion">2</span><h2>Technique — chase the lights</h2></div>
+    <p class="tagline">A method that always works: clear top-down, then fix the last row.</p>
+    <h3>The chase</h3>
+    <p>Go row by row from the top. Whenever a lamp in the row <em>above</em> your current row is lit,
+      press the lamp directly below it — that’s the only way left to turn it off. Sweep downward and
+      every row clears except possibly the bottom one.</p>
+    <h3>The finish</h3>
+    <p>If lamps remain on the bottom row, the pattern there tells you which lamps in the <em>top</em>
+      row to press; chase again, and the board goes dark. (For this 5×5 there’s always a press-set
+      that finishes it.) Or just experiment — it’s small enough to feel your way through.</p>
+  </section>
+
+  <section class="step ox" id="s3">
+    <div class="step-head"><span class="medallion">3</span><h2>Solve — douse every lamp</h2></div>
+    <p class="tagline">Click lamps until the whole grid is dark. The flag lights up when it does.</p>
+    <div class="board" id="board"></div>
+    <div class="status" id="status"></div>
+    <div class="controls" style="justify-content:center"><button class="btn" id="reset">reset the lamps</button></div>
+    <div class="seal" id="seal"><div class="wax">SOLVED</div><div class="msg"><b>All dark.</b><br>
+      <span class="hint" style="font-style:normal">№9 complete — the lamplighter’s rounds are done. Your flag:</span><br>
+      <span class="flagline" id="flagline"></span></div></div>
+  </section>
+
+  <footer><span class="priv">🔒 runs entirely in your browser — nothing is sent anywhere</span><br>The Bazaar · the deduction wing · <a href="../../">back to the cabinet →</a></footer>
+</div>
+<script>
+const $=id=>document.getElementById(id);
+const M=5, START=[[1,0,1,0,1],[0,0,0,0,0],[0,0,0,0,1],[1,0,0,0,1],[0,0,1,1,0]], FLAG="CABINET{all_lamps_dark}";
+let g=START.map(r=>r.slice()), solved=false;
+const el=$("board"); el.style.gridTemplateColumns=`repeat(${M},58px)`;
+function press(r,c){ for(const [dr,dc] of [[0,0],[1,0],[-1,0],[0,1],[0,-1]]){const nr=r+dr,nc=c+dc; if(nr>=0&&nr<M&&nc>=0&&nc<M)g[nr][nc]^=1;} }
+function render(){
+  let lit=0,h="";
+  for(let r=0;r<M;r++)for(let c=0;c<M;c++){ if(g[r][c])lit++; h+=`<div class="cell ${g[r][c]?'on':''}" data-r="${r}" data-c="${c}"></div>`; }
+  el.innerHTML=h;
+  el.querySelectorAll(".cell").forEach(d=>d.onclick=()=>{ if(solved)return; press(+d.dataset.r,+d.dataset.c); render(); });
+  $("status").innerHTML = lit===0 ? '<span class="done">✓ every lamp is out.</span>' : `<b>${lit}</b> lamp${lit>1?'s':''} still lit`;
+  if(lit===0&&!solved){ solved=true; $("flagline").textContent=FLAG; $("seal").classList.add("show"); $("seal").scrollIntoView({behavior:"smooth",block:"center"}); }
+}
+$("reset").onclick=()=>{ g=START.map(r=>r.slice()); solved=false; $("seal").classList.remove("show"); render(); };
+render();
+(function(){const links=[...document.querySelectorAll('nav.path a')];const map={};links.forEach(a=>map[a.getAttribute('href').slice(1)]=a);
+  const obs=new IntersectionObserver(es=>{es.forEach(e=>{if(e.isIntersecting){links.forEach(l=>l.classList.remove('active'));map[e.target.id]&&map[e.target.id].classList.add('active');}});},{rootMargin:"-45% 0px -50% 0px"});
+  ["s1","s2","s3"].forEach(id=>obs.observe($(id)));})();
+</script>
+</body>
+</html>

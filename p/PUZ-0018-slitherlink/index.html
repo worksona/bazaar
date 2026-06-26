@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Lamplighter’s Logic · №17 — Slitherlink</title>
+<style>
+  :root{--paper:#efe6d2;--panel:#f3ecda;--edge:#d9c8a1;--ink:#241f17;--ink-soft:#5a5142;--ink-faint:#8a7d66;
+    --rule:#cdbc96;--rule-soft:#dccfab;--brass:#946312;--ox:#8a2a20;--teal:#256b62;--good:#3c7a37;--glow:#f4c64e;
+    --display:"Hoefler Text","Iowan Old Style","Palatino Linotype",Palatino,"Book Antiqua",Georgia,serif;
+    --body:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,serif;--mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+    --shadow:0 1px 0 rgba(255,253,245,.7) inset,0 14px 30px -22px rgba(40,30,10,.6);}
+  *{box-sizing:border-box}html{scroll-behavior:smooth}
+  body{margin:0;color:var(--ink);font-family:var(--body);line-height:1.62;font-size:17px;background:radial-gradient(120% 80% at 50% -10%,#f6efdd 0%,var(--paper) 55%,#e7dcc2 100%) fixed;}
+  body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:0;mix-blend-mode:multiply;opacity:.5;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.045'/%3E%3C/svg%3E");}
+  .wrap{position:relative;z-index:1;max-width:760px;margin:0 auto;padding:30px 22px 110px}
+  a{color:var(--teal)}.back{font-family:var(--mono);font-size:12px;letter-spacing:.06em;text-transform:uppercase;text-decoration:none;color:var(--ink-faint)}.back:hover{color:var(--brass)}
+  .kicker{font-family:var(--mono);font-size:11px;letter-spacing:.28em;text-transform:uppercase;color:var(--brass);margin:18px 0 8px}
+  header h1{font-family:var(--display);font-weight:600;font-size:clamp(30px,6vw,44px);line-height:1.05;margin:0 0 8px}header h1 .no{color:var(--ox)}
+  .lede{font-size:18px;color:var(--ink-soft);font-style:italic;margin:0 0 14px;max-width:54ch}
+  .meta{display:flex;gap:10px;flex-wrap:wrap;margin-top:6px}
+  .chip{font-family:var(--mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;border:1px solid var(--edge);background:var(--panel);border-radius:999px;padding:4px 12px;color:var(--ink-soft)}
+  .chip.grade{border-color:var(--brass);color:var(--brass)}.chip b{color:var(--ink)}
+  nav.path{position:sticky;top:0;z-index:5;margin:22px -22px 0;padding:10px 22px;background:linear-gradient(var(--paper),rgba(239,230,210,.86));backdrop-filter:blur(6px);border-bottom:1px solid var(--rule)}
+  nav.path ol{list-style:none;display:flex;gap:6px;margin:0;padding:0;flex-wrap:wrap;font-family:var(--mono);font-size:11.5px;letter-spacing:.04em;text-transform:uppercase}
+  nav.path a{display:flex;align-items:center;gap:8px;text-decoration:none;color:var(--ink-faint);padding:6px 11px;border-radius:8px;border:1px solid transparent}
+  nav.path a .n{width:19px;height:19px;border-radius:50%;border:1px solid var(--edge);display:grid;place-items:center;font-size:10px}
+  nav.path a:hover{color:var(--ink);background:#f7f0de}nav.path a.active{color:var(--ox);border-color:var(--rule);background:#f7efdb}
+  nav.path a.active .n{border-color:var(--ox);background:var(--ox);color:#fbf3e3}
+  .step{position:relative;background:var(--panel);border:1px solid var(--edge);border-radius:14px;padding:26px 26px 24px;margin:26px 0;box-shadow:var(--shadow)}
+  .step::after{content:"";position:absolute;inset:6px;border:1px solid var(--rule-soft);border-radius:9px;pointer-events:none}.step>*{position:relative}
+  .step-head{display:flex;align-items:baseline;gap:14px;margin:0 0 4px}
+  .medallion{flex:none;width:34px;height:34px;border-radius:50%;display:grid;place-items:center;font-family:var(--mono);font-size:14px;font-weight:700;color:#fbf3e3;background:var(--brass);box-shadow:0 0 0 3px var(--panel),0 0 0 4px var(--brass)}
+  .step.teal .medallion{background:var(--teal);box-shadow:0 0 0 3px var(--panel),0 0 0 4px var(--teal)}
+  .step.ox .medallion{background:var(--ox);box-shadow:0 0 0 3px var(--panel),0 0 0 4px var(--ox)}
+  .step h2{font-family:var(--display);font-weight:600;font-size:24px;margin:0}
+  .tagline{color:var(--ink-soft);font-style:italic;margin:2px 0 18px;font-size:15.5px}
+  h3{font-family:var(--mono);font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--teal);margin:20px 0 8px}.step.ox h3{color:var(--ox)}
+  p{margin:0 0 12px}.dropcap::first-letter{float:left;font-family:var(--display);font-size:56px;line-height:.78;font-weight:600;padding:6px 10px 0 0;color:var(--ox)}
+  .hint{color:var(--ink-faint);font-size:13px;font-style:italic}.mono{font-family:var(--mono)}
+  .btn{font-family:var(--mono);font-size:12px;letter-spacing:.06em;font-weight:700;cursor:pointer;border-radius:9px;padding:10px 15px;border:1px solid var(--edge);background:transparent;color:var(--ink-soft)}.btn:hover{border-color:var(--brass);color:var(--brass)}
+  .controls{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin:14px 0 0;justify-content:center}
+  .callout{display:flex;gap:12px;align-items:flex-start;background:#fbf4e2;border:1px solid var(--edge);border-left:4px solid var(--teal);border-radius:9px;padding:13px 15px;margin-top:14px;font-size:15px}.callout .big{font-family:var(--display);font-size:30px;line-height:1;color:var(--teal);font-weight:700}
+  .status{font-family:var(--mono);font-size:13px;color:var(--ink-soft);margin-top:14px;text-align:center}.status .done{color:var(--good)}
+  .boardwrap{overflow:auto;display:flex;justify-content:center;margin-top:6px}
+  .seal{display:none;align-items:center;gap:14px;margin-top:16px;animation:pop .5s ease both}.seal.show{display:flex}
+  .seal .wax{width:62px;height:62px;flex:none;border-radius:50%;background:radial-gradient(circle at 38% 34%,#c0432f,var(--ox) 60%,#6e1f17);color:#f3d9c8;display:grid;place-items:center;font-family:var(--display);font-weight:700;font-size:13px;box-shadow:0 6px 16px -8px rgba(110,31,23,.8);transform:rotate(-7deg)}
+  .seal .msg b{font-family:var(--display);font-size:20px;color:var(--ox)}
+  .flagline{font-family:var(--mono);font-size:15px;color:var(--ox);background:#f7efda;border:1px solid var(--brass);border-radius:8px;padding:8px 12px;display:inline-block;margin-top:8px}
+  @keyframes pop{0%{transform:scale(.7);opacity:0}60%{transform:scale(1.06)}100%{transform:scale(1)}}
+  details{margin-top:14px;border-top:1px solid var(--rule-soft);padding-top:10px}details summary{cursor:pointer;font-family:var(--mono);font-size:12px;color:var(--teal);list-style:none}details summary::-webkit-details-marker{display:none}details summary::before{content:"▸ ";color:var(--brass)}details[open] summary::before{content:"▾ "}
+  footer{margin-top:40px;color:var(--ink-faint);font-size:12.5px;font-family:var(--mono);text-align:center;line-height:1.8}.priv{display:inline-block;border:1px solid var(--edge);border-radius:999px;padding:4px 12px;margin-bottom:8px}
+  ::selection{background:rgba(138,42,32,.18)}
+  /* fill-a-pix */
+  .grid-fp{display:grid;background:#e3d4ad;padding:8px;border:1px solid var(--edge);border-radius:10px}
+  .fp{width:34px;height:34px;display:grid;place-items:center;font-family:var(--mono);font-size:13px;cursor:pointer;border:1px solid var(--rule-soft);background:#fbf4e2;color:var(--ink-soft);user-select:none}
+  .fp.fill{background:#2a2018;color:#bfae86;border-color:#15100b}
+  .fp.x{color:var(--ink-faint)}.fp.x::after{content:"";}
+  /* number grids (skyscrapers, numbrix) */
+  .grid-n{display:grid;background:var(--panel);padding:6px;border:1px solid var(--edge);border-radius:10px}
+  .gc{width:44px;height:44px;display:grid;place-items:center;font-family:var(--mono);font-size:18px}
+  .gc input{width:44px;height:44px;text-align:center;font-family:var(--mono);font-size:18px;border:1px solid var(--rule-soft);background:#fbf4e2;color:var(--teal);border-radius:6px;padding:0}
+  .gc input:focus{outline:none;border-color:var(--brass);box-shadow:0 0 0 2px rgba(148,99,18,.18)}
+  .gc.cell{border:1px solid var(--rule-soft);background:#fbf4e2}
+  .gc.given{background:#f0e7cf;color:var(--ink);font-weight:700;border:1px solid var(--rule-soft)}
+  .gc.clue{color:var(--ox);font-weight:700;font-size:15px}
+  .gc.bad input,.gc.bad{color:#b23!important}
+  /* tents */
+  .grid-t{display:grid;background:var(--panel);padding:6px;border:1px solid var(--edge);border-radius:10px}
+  .tc{width:40px;height:40px;display:grid;place-items:center;font-size:20px;user-select:none}
+  .tc.clue{font-family:var(--mono);font-weight:700;color:var(--ox);font-size:15px}
+  .tc.cell{border:1px solid var(--rule-soft);background:#fbf4e2;cursor:pointer;font-size:22px}
+  .tc.tree{cursor:default}
+  .tc.x::after{content:"·";color:var(--ink-faint);font-size:22px}
+  /* slitherlink */
+  .grid-s{display:grid;background:var(--panel);padding:14px;border:1px solid var(--edge);border-radius:10px}
+  .dot{width:8px;height:8px;border-radius:50%;background:#7a6a48;justify-self:center;align-self:center}
+  .clue{display:grid;place-items:center;font-family:var(--mono);font-size:16px;color:var(--ink-soft)}
+  .eh{height:8px;cursor:pointer;align-self:center;border-radius:4px;background:transparent}
+  .eh.line{background:var(--ox)}.eh.cross{background:transparent;position:relative}
+  .ev{width:8px;cursor:pointer;justify-self:center;border-radius:4px;background:transparent}
+  .ev.line{background:var(--ox)}
+  .eh:hover,.ev:hover{background:rgba(148,99,18,.35)}
+  .eh.line:hover,.ev.line:hover{background:var(--ox)}
+  .eh.cross::after,.ev.cross::after{content:"×";position:absolute;inset:0;display:grid;place-items:center;color:var(--ink-faint);font-size:11px}
+  .eh.cross,.ev.cross{position:relative}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <a class="back" href="../../">← back to The Bazaar</a>
+  <div class="kicker">The Bazaar · The Lamplighter’s Logic · №17</div>
+  <header>
+    <h1><span class="no">Slitherlink</span></h1>
+    <p class="lede">Draw one single loop along the grid lines. Each number says how many of its four sides the loop uses — no branches, no crossings, no second loop.</p>
+    <div class="meta"><span class="chip grade">difficulty · advanced</span><span class="chip">⏱ <b>20–35 min</b></span><span class="chip">you’ll learn <b>loop logic</b></span></div>
+  </header>
+  <nav class="path"><ol>
+    <li><a href="#s1"><span class="n">1</span> Learn</a></li>
+    <li><a href="#s2"><span class="n">2</span> Technique</a></li>
+    <li><a href="#s3"><span class="n">3</span> Solve</a></li>
+  </ol></nav>
+
+  <section class="step" id="s1">
+    <div class="step-head"><span class="medallion">1</span><h2>Learn — one closed loop</h2></div>
+    <p class="tagline">A Nikoli original, and the classic “draw a loop” puzzle.</p><p class="dropcap"><b>Connect the dots</b> with horizontal and vertical segments to form a <em>single</em> closed loop that never crosses or branches. The numbers inside the cells are the rule: a cell marked <span class="mono">3</span> has exactly three of its four edges on the loop; a <span class="mono">0</span> has none; blank cells can be anything. Get every clue right with one unbroken loop and you’re done.</p><div class="callout"><span class="big">“</span><div><b>Why it belongs here:</b> Slitherlink rewards reasoning about <em>edges and corners</em> rather than cells. A 0 next to a 3, a 3 in a corner — each is a tiny theorem that forces several segments at once.</div></div>
+  </section>
+  <section class="step teal" id="s2">
+    <div class="step-head"><span class="medallion">2</span><h2>Technique — corners and zeros</h2></div>
+    <h3>The 0</h3><p>A <span class="mono">0</span> has no loop on any side — cross all four edges off. Any clue touching it loses those shared edges, which often forces its remaining segments.</p><h3>The 3 in a corner</h3><p>A <span class="mono">3</span> in the grid’s corner must use both outer edges. Two adjacent 3s force the segment between them plus the two outer edges. Learn a handful of these patterns and loops unzip quickly.</p><p class="hint" style="font-style:normal">Click an edge to cycle blank → line → × (ruled-out) → blank. Build until one closed loop satisfies every number.</p>
+  </section>
+  <section class="step ox" id="s3">
+    <div class="step-head"><span class="medallion">3</span><h2>Solve — close the loop</h2></div>
+    <p class="tagline">One single loop, every clue satisfied. Finish it and the flag lights.</p>
+    <div class="boardwrap"><div class="grid-s" id="board"></div></div>
+    <div class="status" id="status"></div>
+    <div class="controls"><button class="btn" id="reset">clear the loop</button></div>
+    <div class="seal" id="seal"><div class="wax">SOLVED</div><div class="msg"><b>One unbroken loop.</b><br>
+      <span class="hint" style="font-style:normal">№17 complete — drawn by deduction alone. Your flag:</span><br>
+      <span class="flagline" id="flagline"></span></div></div>
+  </section>
+  <footer><span class="priv">🔒 runs entirely in your browser — nothing is sent anywhere</span><br>The Bazaar · the deduction wing · <a href="../../">back to the cabinet →</a></footer>
+</div>
+<script>
+const $=id=>document.getElementById(id);
+function reveal(flag){ $("flagline").textContent=flag; $("seal").classList.add("show"); $("seal").scrollIntoView({behavior:"smooth",block:"center"}); }
+
+const R=6,C=6,FLAG="CABINET{one_unbroken_loop}";
+const CLUES=[[1, 0, -1, 0, 0, 0], [3, 3, 3, -1, 0, 0], [1, -1, 1, 2, -1, -1], [1, 0, 0, 2, 2, 0], [2, 0, 0, 0, 2, -1], [2, 2, 1, 1, 2, 1]];
+let H=Array.from({length:R+1},()=>new Array(C).fill(0)); // 0 blank,1 line,2 cross
+let V=Array.from({length:R},()=>new Array(C+1).fill(0));
+let solved=false;
+const el=$("board");
+// grid columns: dot(14) edge(34) ... = 2C+1 tracks
+const cols=[];for(let c=0;c<C;c++){cols.push("14px");cols.push("34px");}cols.push("14px");
+const rows=[];for(let r=0;r<R;r++){rows.push("14px");rows.push("34px");}rows.push("14px");
+el.style.gridTemplateColumns=cols.join(" ");el.style.gridTemplateRows=rows.join(" ");
+function render(){
+ let h="";
+ for(let gr=0;gr<2*R+1;gr++){
+   for(let gc=0;gc<2*C+1;gc++){
+     const er=gr%2===0,ec=gc%2===0;
+     if(er&&ec){h+=`<div class="dot"></div>`;}
+     else if(er&&!ec){const r=gr/2,c=(gc-1)/2;const s=H[r][c];h+=`<div class="eh ${s===1?'line':s===2?'cross':''}" data-t="h" data-r="${r}" data-c="${c}"></div>`;}
+     else if(!er&&ec){const r=(gr-1)/2,c=gc/2;const s=V[r][c];h+=`<div class="ev ${s===1?'line':s===2?'cross':''}" data-t="v" data-r="${r}" data-c="${c}"></div>`;}
+     else{const r=(gr-1)/2,c=(gc-1)/2;const cl=CLUES[r][c];h+=`<div class="clue">${cl<0?'':cl}</div>`;}
+   }
+ }
+ el.innerHTML=h;
+ el.querySelectorAll('.eh,.ev').forEach(d=>d.onclick=()=>{if(solved)return;const r=+d.dataset.r,c=+d.dataset.c;if(d.dataset.t==='h')H[r][c]=(H[r][c]+1)%3;else V[r][c]=(V[r][c]+1)%3;check();});
+ $("status").innerHTML=won()?'<span class="done">✓ one closed loop satisfies every clue.</span>':status();
+}
+function status(){
+ // clue progress
+ let bad=0;for(let r=0;r<R;r++)for(let c=0;c<C;c++){if(CLUES[r][c]<0)continue;const n=H[r][c]+H[r+1][c]+V[r][c]+V[r][c+1]-( (H[r][c]===2?1:0)+(H[r+1][c]===2?1:0)+(V[r][c]===2?1:0)+(V[r][c+1]===2?1:0) );}
+ return 'draw segments until one loop matches every number';
+}
+function lineCountCell(r,c){return (H[r][c]===1)+(H[r+1][c]===1)+(V[r][c]===1)+(V[r][c+1]===1);}
+function won(){
+ // clues
+ for(let r=0;r<R;r++)for(let c=0;c<C;c++){if(CLUES[r][c]>=0&&lineCountCell(r,c)!==CLUES[r][c])return false;}
+ // dot degrees 0 or 2
+ const deg={},key=(r,c)=>r+","+c;let edges=0;
+ const adj={};
+ function addEdge(a,b){edges++;deg[a]=(deg[a]||0)+1;deg[b]=(deg[b]||0)+1;(adj[a]=adj[a]||[]).push(b);(adj[b]=adj[b]||[]).push(a);}
+ for(let r=0;r<=R;r++)for(let c=0;c<C;c++)if(H[r][c]===1)addEdge(key(r,c),key(r,c+1));
+ for(let r=0;r<R;r++)for(let c=0;c<=C;c++)if(V[r][c]===1)addEdge(key(r,c),key(r+1,c));
+ if(edges===0)return false;
+ for(const k in deg)if(deg[k]!==0&&deg[k]!==2)return false;
+ // single connected component among dots that have edges
+ const nodes=Object.keys(deg).filter(k=>deg[k]>0);
+ const seen=new Set();const stack=[nodes[0]];seen.add(nodes[0]);
+ while(stack.length){const u=stack.pop();for(const v of (adj[u]||[]))if(!seen.has(v)){seen.add(v);stack.push(v);}}
+ return seen.size===nodes.length;
+}
+function check(){render();if(won()&&!solved){solved=true;reveal(FLAG);}}
+$("reset").onclick=()=>{H=Array.from({length:R+1},()=>new Array(C).fill(0));V=Array.from({length:R},()=>new Array(C+1).fill(0));solved=false;$("seal").classList.remove("show");render();};
+render();
+
+(function(){const links=[...document.querySelectorAll('nav.path a')];const map={};links.forEach(a=>map[a.getAttribute('href').slice(1)]=a);
+  const obs=new IntersectionObserver(es=>{es.forEach(e=>{if(e.isIntersecting){links.forEach(l=>l.classList.remove('active'));map[e.target.id]&&map[e.target.id].classList.add('active');}});},{rootMargin:"-45% 0px -50% 0px"});
+  ["s1","s2","s3"].forEach(id=>obs.observe($(id)));})();
+</script>
+</body>
+</html>

@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Cabinet of Ciphers · №5 — Rotor Machine</title>
+<style>
+  :root{
+    --paper:#efe6d2;--paper2:#e7dabd;--panel:#f3ecda;--edge:#d9c8a1;
+    --ink:#241f17;--ink-soft:#5a5142;--ink-faint:#8a7d66;
+    --rule:#cdbc96;--rule-soft:#dccfab;
+    --brass:#946312;--brass-bright:#b3832a;--ox:#8a2a20;--teal:#256b62;--good:#3c7a37;
+    --display:"Hoefler Text","Iowan Old Style","Palatino Linotype",Palatino,"Book Antiqua",Georgia,serif;
+    --body:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,"Times New Roman",serif;
+    --mono:ui-monospace,"SF Mono",SFMono-Regular,Menlo,Monaco,Consolas,monospace;
+    --shadow:0 1px 0 rgba(255,253,245,.7) inset,0 14px 30px -22px rgba(40,30,10,.6);
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{margin:0;color:var(--ink);font-family:var(--body);line-height:1.62;font-size:17px;background:radial-gradient(120% 80% at 50% -10%,#f6efdd 0%,var(--paper) 55%,#e7dcc2 100%) fixed;}
+  body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:0;mix-blend-mode:multiply;opacity:.5;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.045'/%3E%3C/svg%3E");}
+  .wrap{position:relative;z-index:1;max-width:900px;margin:0 auto;padding:30px 22px 110px}
+  a{color:var(--teal)}
+  .back{font-family:var(--mono);font-size:12px;letter-spacing:.06em;text-transform:uppercase;text-decoration:none;color:var(--ink-faint)}
+  .back:hover{color:var(--brass)}
+  .kicker{font-family:var(--mono);font-size:11px;letter-spacing:.28em;text-transform:uppercase;color:var(--brass);margin:18px 0 8px}
+  header h1{font-family:var(--display);font-weight:600;font-size:clamp(30px,6vw,46px);line-height:1.05;margin:0 0 8px}
+  header h1 .no{color:var(--ox)}
+  .lede{font-size:18px;color:var(--ink-soft);font-style:italic;margin:0 0 14px;max-width:54ch}
+  .meta{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:6px}
+  .chip{font-family:var(--mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;border:1px solid var(--edge);background:var(--panel);border-radius:999px;padding:4px 12px;color:var(--ink-soft)}
+  .chip.grade{border-color:var(--brass);color:var(--brass)}.chip b{color:var(--ink)}
+  nav.path{position:sticky;top:0;z-index:5;margin:22px -22px 0;padding:10px 22px;background:linear-gradient(var(--paper),rgba(239,230,210,.86));backdrop-filter:blur(6px);border-bottom:1px solid var(--rule)}
+  nav.path ol{list-style:none;display:flex;gap:6px;margin:0;padding:0;flex-wrap:wrap;font-family:var(--mono);font-size:11.5px;letter-spacing:.04em;text-transform:uppercase}
+  nav.path a{display:flex;align-items:center;gap:8px;text-decoration:none;color:var(--ink-faint);padding:6px 11px;border-radius:8px;border:1px solid transparent}
+  nav.path a .n{width:19px;height:19px;border-radius:50%;border:1px solid var(--edge);display:grid;place-items:center;font-size:10px;color:var(--ink-soft)}
+  nav.path a:hover{color:var(--ink);background:#f7f0de}
+  nav.path a.active{color:var(--ox);border-color:var(--rule);background:#f7efdb}
+  nav.path a.active .n{border-color:var(--ox);background:var(--ox);color:#fbf3e3}
+  .step{position:relative;background:var(--panel);border:1px solid var(--edge);border-radius:14px;padding:26px 26px 24px;margin:26px 0;box-shadow:var(--shadow)}
+  .step::after{content:"";position:absolute;inset:6px;border:1px solid var(--rule-soft);border-radius:9px;pointer-events:none}
+  .step>*{position:relative}
+  .step-head{display:flex;align-items:baseline;gap:14px;margin:0 0 4px}
+  .medallion{flex:none;width:34px;height:34px;border-radius:50%;display:grid;place-items:center;font-family:var(--mono);font-size:14px;font-weight:700;color:#fbf3e3;background:var(--brass);box-shadow:0 0 0 3px #f3ecda,0 0 0 4px var(--brass)}
+  .step.teal .medallion{background:var(--teal);box-shadow:0 0 0 3px #f3ecda,0 0 0 4px var(--teal)}
+  .step.ox .medallion{background:var(--ox);box-shadow:0 0 0 3px #f3ecda,0 0 0 4px var(--ox)}
+  .step h2{font-family:var(--display);font-weight:600;font-size:25px;margin:0}
+  .tagline{color:var(--ink-soft);font-style:italic;margin:2px 0 18px;font-size:15.5px}
+  h3{font-family:var(--mono);font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--teal);margin:22px 0 8px}
+  .step.ox h3{color:var(--ox)}
+  p{margin:0 0 12px}
+  .dropcap::first-letter{float:left;font-family:var(--display);font-size:58px;line-height:.78;font-weight:600;padding:6px 10px 0 0;color:var(--ox)}
+  label{display:block;font-family:var(--mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-faint);margin:14px 0 5px}
+  textarea,input[type=text],select{background:#fbf4e2;color:var(--ink);border:1px solid var(--edge);border-radius:9px;padding:11px 12px;font-family:var(--mono);font-size:14px;line-height:1.5}
+  textarea{width:100%;min-height:80px;resize:vertical}input[type=text]{width:100%}
+  input[type=text]:focus,textarea:focus,select:focus{outline:none;border-color:var(--brass);box-shadow:0 0 0 3px rgba(148,99,18,.14)}
+  .row{display:flex;gap:18px;flex-wrap:wrap}.row>div{flex:1;min-width:250px}
+  .controls{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin:14px 0 0}
+  .btn{font-family:var(--mono);font-size:12px;letter-spacing:.06em;font-weight:700;cursor:pointer;border-radius:9px;padding:10px 15px;border:1px solid transparent;transition:transform .06s,filter .15s}
+  .btn:active{transform:translateY(1px)}
+  .btn--brass{background:var(--brass);color:#fbf3e3}.btn--brass:hover{filter:brightness(1.08)}
+  .btn--ox{background:var(--ox);color:#fbf3e3}.btn--ox:hover{filter:brightness(1.08)}
+  .btn--teal{background:var(--teal);color:#fbf3e3}.btn--teal:hover{filter:brightness(1.08)}
+  .btn--ghost{background:transparent;border-color:var(--edge);color:var(--ink-soft)}.btn--ghost:hover{border-color:var(--brass);color:var(--brass)}
+  .btn[disabled]{opacity:.5;cursor:wait}
+  .seg{display:inline-flex;border:1px solid var(--edge);border-radius:9px;overflow:hidden;background:#fbf4e2}
+  .seg button{font-family:var(--mono);font-size:12px;letter-spacing:.06em;background:transparent;border:0;color:var(--ink-faint);padding:9px 16px;cursor:pointer}
+  .seg button.on{background:var(--teal);color:#fbf3e3;font-weight:700}
+  .hint{color:var(--ink-faint);font-size:13px;font-style:italic} .mono{font-family:var(--mono)}
+  .out{white-space:pre-wrap;word-break:break-word;background:#fbf4e2;border:1px solid var(--edge);border-radius:9px;padding:12px;font-family:var(--mono);font-size:14px;min-height:48px;letter-spacing:1px}
+  .rotors{display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end;margin-top:6px}
+  .rotorset{display:flex;flex-direction:column;gap:5px}
+  .rotorset .lab{font-family:var(--mono);font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-faint)}
+  .rotorset .pair{display:flex;gap:5px}
+  .rotorset select{padding:8px 8px}
+  .rotorset input{width:46px;text-align:center;text-transform:uppercase;font-weight:700;color:var(--ox)}
+  details{margin-top:14px;border-top:1px solid var(--rule-soft);padding-top:10px}
+  details summary{cursor:pointer;font-family:var(--mono);font-size:12px;letter-spacing:.06em;color:var(--teal);list-style:none}
+  details summary::-webkit-details-marker{display:none}
+  details summary::before{content:"▸ ";color:var(--brass)} details[open] summary::before{content:"▾ "}
+  .callout{display:flex;gap:12px;align-items:flex-start;background:#fbf4e2;border:1px solid var(--edge);border-left:4px solid var(--teal);border-radius:9px;padding:13px 15px;margin-top:14px;font-size:15px}
+  .callout .big{font-family:var(--display);font-size:30px;line-height:1;color:var(--teal);font-weight:700}
+  .found{background:#f7efda;border:1px solid var(--brass);border-radius:10px;padding:14px 16px;margin-top:14px;display:none}
+  .found.show{display:block}
+  .found .set{font-family:var(--display);font-size:26px;font-weight:700;color:var(--ox);letter-spacing:.06em}
+  .preview{white-space:pre-wrap;word-break:break-word;background:#fbf4e2;border:1px solid var(--edge);border-radius:9px;padding:12px;font-family:var(--mono);font-size:14px;line-height:1.7;margin-top:10px;letter-spacing:1px}
+  .quay{background:#fbf4e2;border:1px solid var(--edge);border-radius:10px;padding:16px;font-family:var(--mono);font-size:13.5px;line-height:1.8;letter-spacing:1px;white-space:pre-wrap;word-break:break-word;color:var(--ink-soft);box-shadow:inset 0 0 40px -28px rgba(40,30,10,.8)}
+  ol.checklist{margin:6px 0 0;padding-left:0;list-style:none;counter-reset:c}
+  ol.checklist li{counter-increment:c;position:relative;padding:5px 0 5px 34px;font-size:15px}
+  ol.checklist li::before{content:counter(c);position:absolute;left:0;top:4px;width:22px;height:22px;border-radius:50%;background:var(--brass);color:#fbf3e3;font-family:var(--mono);font-size:11px;display:grid;place-items:center}
+  .flagbox{display:flex;gap:10px;flex-wrap:wrap;align-items:stretch;margin-top:8px}.flagbox input{flex:1;min-width:240px}
+  .verdict{margin-top:12px;font-family:var(--mono);font-size:14px;min-height:22px}.verdict.ok{color:var(--good)}.verdict.no{color:var(--ox)}
+  .seal{display:none;align-items:center;gap:14px;margin-top:14px;animation:pop .5s ease both}.seal.show{display:flex}
+  .seal .wax{width:62px;height:62px;flex:none;border-radius:50%;background:radial-gradient(circle at 38% 34%,#c0432f,var(--ox) 60%,#6e1f17);color:#f3d9c8;display:grid;place-items:center;font-family:var(--display);font-weight:700;font-size:13px;letter-spacing:.05em;box-shadow:0 6px 16px -8px rgba(110,31,23,.8),inset 0 2px 4px rgba(255,255,255,.25);transform:rotate(-7deg)}
+  .seal .msg b{font-family:var(--display);font-size:20px;color:var(--ox)}
+  @keyframes pop{0%{transform:scale(.7);opacity:0}60%{transform:scale(1.06)}100%{transform:scale(1);opacity:1}}
+  footer{margin-top:40px;color:var(--ink-faint);font-size:12.5px;font-family:var(--mono);text-align:center;line-height:1.8}
+  .priv{display:inline-block;border:1px solid var(--edge);border-radius:999px;padding:4px 12px;margin-bottom:8px}
+  ::selection{background:rgba(138,42,32,.18)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <a class="back" href="../../">← back to The Bazaar</a>
+  <div class="kicker">The Bazaar · Cabinet of Ciphers · №5</div>
+  <header>
+    <h1>The <span class="no">Rotor</span> Machine</h1>
+    <p class="lede">Geared wheels that rewire the alphabet with every keystroke — the cipher that
+      ended the pencil-and-paper era, and the brute-force search that ended <em>it</em>.</p>
+    <div class="meta">
+      <span class="chip grade">difficulty · advanced</span>
+      <span class="chip">⏱ <b>25–35 min</b></span>
+      <span class="chip">you’ll learn <b>polyalphabetic machines + key-space search</b></span>
+    </div>
+  </header>
+
+  <nav class="path" aria-label="steps"><ol>
+    <li><a href="#s1"><span class="n">1</span> Learn</a></li>
+    <li><a href="#s2"><span class="n">2</span> Operate</a></li>
+    <li><a href="#s3"><span class="n">3</span> Analyze</a></li>
+    <li><a href="#s4"><span class="n">4</span> Crack the challenge</a></li>
+  </ol></nav>
+
+  <p class="hint" style="margin-top:18px">New here? Read top to bottom — each station builds on the
+    one before, and the last hands you a flag.</p>
+
+  <!-- STEP 1 -->
+  <section class="step" id="s1">
+    <div class="step-head"><span class="medallion">1</span><h2>Learn — a new alphabet every key</h2></div>
+    <p class="tagline">Three wheels of scrambled wiring, stepping like an odometer, plus a mirror.</p>
+    <p class="dropcap"><b>A rotor machine</b> sends each letter through three wired wheels, bounces it
+      off a reflector, and back out through the wheels again. After every keystroke the right wheel
+      clicks forward one step — and when it completes a turn it nudges the next — so the substitution
+      <em>changes with every letter</em>. This is the Vigenère idea made mechanical, with a key period
+      of thousands. The reflector also makes it self-reversing: the same settings that encode a message
+      decode it.</p>
+    <h3>Its strength — and its fatal gift</h3>
+    <p>The wiring of the wheels was public; the <em>secret</em> was only which order they sat in and
+      where each started — here, 3 wheels in any of 6 orders × 26×26×26 start positions ≈ 105,000
+      settings. Vast for a human, nothing for a search. And the reflector left a crack: a letter can
+      <em>never</em> encrypt to itself. Try every setting, score each decrypt for how English it looks,
+      and the true one stands out like a lit window. Station 3 runs exactly that search — the modern
+      machine that broke the wartime one, in miniature.</p>
+    <div class="callout"><span class="big">“</span><div><b>Best use today:</b> the rotor machine is
+      the bridge from hand-ciphers to the computer age. Breaking it taught the world that key-<em>space</em>,
+      not cleverness, is what a cipher must defend — the lesson all modern cryptography is built on.</div></div>
+  </section>
+
+  <!-- STEP 2 -->
+  <section class="step teal" id="s2">
+    <div class="step-head"><span class="medallion">2</span><h2>Operate the machine</h2></div>
+    <p class="tagline">Choose the wheel order and start letters, then type. Same settings undo it.</p>
+    <p class="hint" style="font-style:normal;margin-top:0">Wheels I, II, III have fixed, public wiring.
+      Because of the reflector there’s no encode/decode switch — feed ciphertext back through the same
+      settings to read it.</p>
+    <div class="rotors">
+      <div class="rotorset"><span class="lab">left wheel</span><div class="pair"><select id="r0"></select><input id="p0" maxlength="1" value="A"></div></div>
+      <div class="rotorset"><span class="lab">middle wheel</span><div class="pair"><select id="r1"></select><input id="p1" maxlength="1" value="A"></div></div>
+      <div class="rotorset"><span class="lab">right wheel</span><div class="pair"><select id="r2"></select><input id="p2" maxlength="1" value="A"></div></div>
+    </div>
+    <div class="row" style="margin-top:6px">
+      <div><label for="inp">message in</label><textarea id="inp" spellcheck="false">Meet me by the harbor wall at dusk</textarea></div>
+      <div><label for="outp">result out</label><div id="outp" class="out mono"></div></div>
+    </div>
+    <div class="controls"><button id="swap" class="btn btn--ghost">↺ use result as input</button>
+      <span class="hint">try it: encode, copy the output back in with the same settings, get your message</span></div>
+  </section>
+
+  <!-- STEP 3 -->
+  <section class="step ox" id="s3">
+    <div class="step-head"><span class="medallion">3</span><h2>Analyze — the settings search</h2></div>
+    <p class="tagline">You don’t know the order or the start letters. So try all 105,456 of them.</p>
+    <label for="ct">ciphertext under attack</label>
+    <textarea id="ct" spellcheck="false" placeholder="paste a ciphertext — or load the challenge from Station 4"></textarea>
+    <p class="hint" style="font-style:normal;margin-top:10px">The search decrypts the message under every
+      wheel order and start position, scoring each result by how closely its letter mix matches English.
+      Only the true settings yield real words, so the top score is almost always the answer.</p>
+    <div class="controls" style="margin-top:6px">
+      <button id="search" class="btn btn--ox">run the settings search →</button>
+      <span class="hint" id="searchnote"></span>
+    </div>
+    <div class="found" id="found">
+      <div>recovered settings</div>
+      <div class="set" id="foundset">—</div>
+      <div class="preview" id="preview"></div>
+      <div class="controls"><button id="usefound" class="btn btn--brass">load these settings into the machine →</button></div>
+    </div>
+  </section>
+
+  <!-- STEP 4 -->
+  <section class="step ox" id="s4">
+    <div class="step-head"><span class="medallion">4</span><h2>Crack the challenge</h2></div>
+    <p class="tagline">Intercepted off the wireless above the quay. The wheels are known; the setting isn’t.</p>
+    <div class="quay" id="challenge"></div>
+    <div class="controls"><button id="loadchal" class="btn btn--ox">load it into the search →</button>
+      <span class="hint">sends this text to Station 3</span></div>
+    <h3>How to crack it</h3>
+    <ol class="checklist">
+      <li><b>Load</b> the intercept into the search (button above).</li>
+      <li>Hit <b>run the settings search</b> — it tries every order and start position in a second or two.</li>
+      <li>Hit <b>load these settings</b> to drop them into the machine and read the message.</li>
+      <li>It names a <b>watchword</b>. The flag is <span class="mono">CABINET{watchword}</span>, lowercase.</li>
+    </ol>
+    <label for="flag">enter the flag</label>
+    <div class="flagbox"><input id="flag" type="text" autocomplete="off" spellcheck="false" placeholder="CABINET{...}"><button id="checkflag" class="btn btn--ox">seal it ✓</button></div>
+    <div class="verdict" id="verdict"></div>
+    <div class="seal" id="seal"><div class="wax">SOLVED</div><div class="msg"><b>The wheels fall still.</b><br><span class="hint" style="font-style:normal">№5 complete — you out-searched a machine that once needed a whole codebreaking hut.</span></div></div>
+    <details><summary>stuck? reveal the settings (spoiler)</summary>
+      <p class="hint" style="margin:10px 0 0">Wheel order <b class="mono" style="color:var(--ox)">II · I · III</b>,
+        start letters <b class="mono" style="color:var(--ox)">K · D · G</b>. Set those at Station 2, paste the
+        challenge, and read the watchword (<span class="mono">THEWHEELSREMEMBER</span>) → flag
+        <span class="mono">CABINET{thewheelsremember}</span>.</p></details>
+  </section>
+
+  <footer>
+    <span class="priv">🔒 runs entirely in your browser — nothing is sent anywhere</span><br>
+    The Cabinet of Ciphers · a graded collection · the last rung — <a href="../../">back to The Bazaar →</a>
+  </footer>
+</div>
+
+<script>
+const A=65,$=id=>document.getElementById(id);
+const onlyAZ=s=>s.toUpperCase().replace(/[^A-Z]/g,"");
+const ROT={I:{w:"EKMFLGDQVZNTOWYHXUSPAIBRCJ",notch:"Q"},II:{w:"AJDKSIRUXBLHWTMCQGZNPYFVOE",notch:"E"},III:{w:"BDFHJLCPRTXVZNYEIWGAKMUSQO",notch:"V"}};
+const REF="YRUHQSLDPXNGOKMIEBFZCWVJAT";
+const NAMES=["I","II","III"];
+function machine(order,positions){
+  const wir=order.map(n=>ROT[n].w);
+  const notch=order.map(n=>ROT[n].notch.charCodeAt(0)-A);
+  const inv=wir.map(w=>{const a=new Array(26);for(let i=0;i<26;i++)a[w.charCodeAt(i)-A]=i;return a;});
+  let p;
+  function step(){const rN=p[2]===notch[2],mN=p[1]===notch[1];if(mN){p[0]=(p[0]+1)%26;p[1]=(p[1]+1)%26;}else if(rN){p[1]=(p[1]+1)%26;}p[2]=(p[2]+1)%26;}
+  function enc(ch){step();let c=ch.charCodeAt(0)-A;for(let i=2;i>=0;i--){c=(c+p[i])%26;c=wir[i].charCodeAt(c)-A;c=(c-p[i]+26)%26;}c=REF.charCodeAt(c)-A;for(let i=0;i<3;i++){c=(c+p[i])%26;c=inv[i][c];c=(c-p[i]+26)%26;}return String.fromCharCode(A+c);}
+  return {run:(text)=>{p=positions.slice();let o="";for(const ch of onlyAZ(text))o+=enc(ch);return o;}};
+}
+const EN=[8.2,1.5,2.8,4.3,12.7,2.2,2.0,6.1,7.0,0.15,0.77,4.0,2.4,6.7,7.5,1.9,0.095,6.0,6.3,9.1,2.8,0.98,2.4,0.15,2.0,0.074];
+const LOGEN=EN.map(f=>Math.log((f||0.05)/100));
+function fitness(s){let t=0;for(const c of s)t+=LOGEN[c.charCodeAt(0)-A];return t;}
+function group(s){return s.replace(/(.....)/g,"$1 ").trim();}
+
+/* populate selects */
+["r0","r1","r2"].forEach((id,i)=>{ $(id).innerHTML=NAMES.map(n=>`<option>${n}</option>`).join(""); $(id).value=["I","II","III"][i]; });
+function getOrder(){return [$("r0").value,$("r1").value,$("r2").value];}
+function getPos(){return ["p0","p1","p2"].map(id=>{const v=onlyAZ($(id).value)[0]||"A";return v.charCodeAt(0)-A;});}
+
+/* engine */
+function run(){$("outp").textContent=group(machine(getOrder(),getPos()).run($("inp").value));}
+["r0","r1","r2"].forEach(id=>$(id).onchange=run);
+["p0","p1","p2"].forEach(id=>$(id).oninput=()=>{$(id).value=onlyAZ($(id).value).slice(0,1);run();});
+$("inp").oninput=run;
+$("swap").onclick=()=>{$("inp").value=$("outp").textContent.replace(/ /g,"");run();};
+
+/* attacker: full settings search */
+const ORDERS=[["I","II","III"],["I","III","II"],["II","I","III"],["II","III","I"],["III","I","II"],["III","II","I"]];
+let foundSetting=null;
+$("search").onclick=()=>{
+  const ct=onlyAZ($("ct").value);
+  if(ct.length<40){$("searchnote").textContent="paste a longer ciphertext first.";return;}
+  $("search").disabled=true;$("searchnote").textContent="searching 105,456 settings…";
+  setTimeout(()=>{
+    let best={fit:-1e9};
+    for(const ord of ORDERS){
+      for(let l=0;l<26;l++)for(let m=0;m<26;m++)for(let r=0;r<26;r++){
+        const dec=machine(ord,[l,m,r]).run(ct);
+        const fit=fitness(dec);
+        if(fit>best.fit)best={fit,ord,pos:[l,m,r],dec};
+      }
+    }
+    foundSetting=best;
+    const posL=best.pos.map(x=>String.fromCharCode(A+x));
+    $("foundset").textContent=`order ${best.ord.join(" · ")}   start ${posL.join(" · ")}`;
+    $("preview").textContent=group(best.dec);
+    $("found").classList.add("show");
+    $("search").disabled=false;$("searchnote").textContent="done — top match below.";
+    $("found").scrollIntoView({behavior:"smooth",block:"center"});
+  },30);
+};
+$("usefound").onclick=()=>{
+  if(!foundSetting)return;
+  $("r0").value=foundSetting.ord[0];$("r1").value=foundSetting.ord[1];$("r2").value=foundSetting.ord[2];
+  ["p0","p1","p2"].forEach((id,i)=>$(id).value=String.fromCharCode(A+foundSetting.pos[i]));
+  $("inp").value=onlyAZ($("ct").value);run();
+  window.scrollTo({top:$("s2").getBoundingClientRect().top+window.scrollY-60,behavior:"smooth"});
+};
+
+/* challenge */
+const CHALLENGE="ANTYZVAWXLIKRXGWZPPPBCNSZKRAOCFKXUKYMTSKQTWZDHASUCJKFVQWTHFKDDNRZRZJLGOTYSYNPFMIFOADWAPTOWZJXXJVGPQUUKFDJWRFNLDWUKIHCPGODXNZTDGEWNQBQQBZBFXDIWLQEHSHOEBYGHBJIPSGDSCNIJPEGZUDNORIBXKUZBTJUAVLCEHUSQSKOODVRGCUN";
+$("challenge").textContent=group(CHALLENGE);
+$("loadchal").onclick=()=>{$("ct").value=CHALLENGE;window.scrollTo({top:$("s3").getBoundingClientRect().top+window.scrollY-60,behavior:"smooth"});};
+
+/* flag */
+const FLAG_HASH="d7fba1377213131faec0ab32c0d14f7d8b875f4e478d061f57666561137ec495";
+async function sha256(str){const b=await crypto.subtle.digest("SHA-256",new TextEncoder().encode(str));return [...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,"0")).join("");}
+const norm=s=>s.toLowerCase().replace(/[^a-z0-9]/g,"");
+$("checkflag").onclick=async()=>{
+  const raw=$("flag").value.trim(),v=$("verdict");
+  if(!raw){v.className="verdict no";v.textContent="type or paste the flag first.";return;}
+  const h=await sha256(norm(raw));
+  if(h===FLAG_HASH){v.className="verdict ok";v.textContent="✓ correct.";$("seal").classList.add("show");$("seal").scrollIntoView({behavior:"smooth",block:"center"});}
+  else{v.className="verdict no";v.textContent=/cabinet/i.test(raw)?"close — right shape, wrong contents. Re-read the watchword.":"not yet — the flag looks like CABINET{...}. Run the search first.";$("seal").classList.remove("show");}
+};
+$("flag").addEventListener("keydown",e=>{if(e.key==="Enter")$("checkflag").click();});
+
+/* scrollspy */
+(function(){const links=[...document.querySelectorAll('nav.path a')];const map={};links.forEach(a=>map[a.getAttribute('href').slice(1)]=a);
+  const obs=new IntersectionObserver(es=>{es.forEach(e=>{if(e.isIntersecting){links.forEach(l=>l.classList.remove('active'));map[e.target.id]&&map[e.target.id].classList.add('active');}});},{rootMargin:"-45% 0px -50% 0px"});
+  ["s1","s2","s3","s4"].forEach(id=>obs.observe($(id)));})();
+run();
+</script>
+</body>
+</html>

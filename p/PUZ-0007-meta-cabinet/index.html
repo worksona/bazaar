@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Cabinet’s Answer · Meta — the five keys</title>
+<style>
+  :root{
+    --paper:#efe6d2;--paper2:#e7dabd;--panel:#f3ecda;--edge:#d9c8a1;
+    --ink:#241f17;--ink-soft:#5a5142;--ink-faint:#8a7d66;
+    --rule:#cdbc96;--rule-soft:#dccfab;
+    --brass:#946312;--brass-bright:#b3832a;--ox:#8a2a20;--teal:#256b62;--good:#3c7a37;
+    --display:"Hoefler Text","Iowan Old Style","Palatino Linotype",Palatino,"Book Antiqua",Georgia,serif;
+    --body:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,"Times New Roman",serif;
+    --mono:ui-monospace,"SF Mono",SFMono-Regular,Menlo,Monaco,Consolas,monospace;
+    --shadow:0 1px 0 rgba(255,253,245,.7) inset,0 14px 30px -22px rgba(40,30,10,.6);
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{margin:0;color:var(--ink);font-family:var(--body);line-height:1.62;font-size:17px;background:radial-gradient(120% 80% at 50% -10%,#f6efdd 0%,var(--paper) 55%,#e7dcc2 100%) fixed;}
+  body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:0;mix-blend-mode:multiply;opacity:.5;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.045'/%3E%3C/svg%3E");}
+  .wrap{position:relative;z-index:1;max-width:840px;margin:0 auto;padding:30px 22px 110px}
+  a{color:var(--teal)}
+  .back{font-family:var(--mono);font-size:12px;letter-spacing:.06em;text-transform:uppercase;text-decoration:none;color:var(--ink-faint)}
+  .back:hover{color:var(--brass)}
+  .kicker{font-family:var(--mono);font-size:11px;letter-spacing:.28em;text-transform:uppercase;color:var(--brass);margin:18px 0 8px}
+  header h1{font-family:var(--display);font-weight:600;font-size:clamp(30px,6vw,46px);line-height:1.05;margin:0 0 8px}
+  header h1 .no{color:var(--ox)}
+  .lede{font-size:18px;color:var(--ink-soft);font-style:italic;margin:0 0 14px;max-width:56ch}
+  .meta{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:6px}
+  .chip{font-family:var(--mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;border:1px solid var(--edge);background:var(--panel);border-radius:999px;padding:4px 12px;color:var(--ink-soft)}
+  .chip.grade{border-color:var(--ox);color:var(--ox)}.chip b{color:var(--ink)}
+  .step{position:relative;background:var(--panel);border:1px solid var(--edge);border-radius:14px;padding:26px 26px 24px;margin:26px 0;box-shadow:var(--shadow)}
+  .step::after{content:"";position:absolute;inset:6px;border:1px solid var(--rule-soft);border-radius:9px;pointer-events:none}
+  .step>*{position:relative}
+  .step-head{display:flex;align-items:baseline;gap:14px;margin:0 0 4px}
+  .medallion{flex:none;width:34px;height:34px;border-radius:50%;display:grid;place-items:center;font-family:var(--mono);font-size:14px;font-weight:700;color:#fbf3e3;background:var(--brass);box-shadow:0 0 0 3px #f3ecda,0 0 0 4px var(--brass)}
+  .step.ox .medallion{background:var(--ox);box-shadow:0 0 0 3px #f3ecda,0 0 0 4px var(--ox)}
+  .step h2{font-family:var(--display);font-weight:600;font-size:25px;margin:0}
+  .tagline{color:var(--ink-soft);font-style:italic;margin:2px 0 18px;font-size:15.5px}
+  p{margin:0 0 12px}
+  .dropcap::first-letter{float:left;font-family:var(--display);font-size:58px;line-height:.78;font-weight:600;padding:6px 10px 0 0;color:var(--ox)}
+  .hint{color:var(--ink-faint);font-size:13px;font-style:italic}.mono{font-family:var(--mono)}
+
+  /* lock panels */
+  .locks{display:grid;gap:14px;margin-top:8px}
+  .lock{background:#fbf4e2;border:1px solid var(--edge);border-radius:11px;padding:14px 16px;position:relative}
+  .lock.solved{border-color:var(--good);background:#f1f4e4}
+  .lock .top{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;margin-bottom:8px}
+  .lock .no{font-family:var(--mono);font-size:11px;letter-spacing:.1em;color:var(--brass)}
+  .lock h3{font-family:var(--display);font-size:18px;margin:0;color:var(--ink)}
+  .lock .ref{font-family:var(--mono);font-size:11px;margin-left:auto}
+  .lock .ct{font-family:var(--mono);font-size:14px;letter-spacing:1px;background:#fff;border:1px solid var(--edge);border-radius:7px;padding:7px 10px;color:var(--ink-soft);display:inline-block;margin-bottom:8px}
+  .lock label{display:block;font-family:var(--mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-faint);margin:6px 0 4px}
+  .lock input,.lock select{background:#fff;color:var(--ink);border:1px solid var(--edge);border-radius:8px;padding:9px 10px;font-family:var(--mono);font-size:14px}
+  .lock input[type=text]{width:100%;max-width:320px}
+  .lock input:focus,.lock select:focus{outline:none;border-color:var(--brass);box-shadow:0 0 0 3px rgba(148,99,18,.14)}
+  .rotorrow{display:flex;gap:6px;flex-wrap:wrap;align-items:flex-end}
+  .rotorrow .grp{display:flex;flex-direction:column;gap:3px}
+  .rotorrow .grp span{font-family:var(--mono);font-size:9px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-faint)}
+  .rotorrow input{width:42px;text-align:center;text-transform:uppercase;font-weight:700;color:var(--ox)}
+  .lock .res{margin-top:10px;font-family:var(--mono);font-size:15px;display:flex;align-items:center;gap:8px}
+  .lock .res .word{font-weight:700;letter-spacing:2px}
+  .lock.solved .res .word{color:var(--good)}
+  .lock .mark{width:22px;height:22px;border-radius:50%;display:grid;place-items:center;font-size:13px;border:1px solid var(--edge);color:var(--ink-faint)}
+  .lock.solved .mark{background:var(--good);color:#fff;border-color:var(--good)}
+
+  /* assembly */
+  .assembly{font-family:var(--display);font-size:clamp(20px,4.5vw,30px);text-align:center;letter-spacing:.04em;margin:6px 0 4px;color:var(--ink-faint)}
+  .assembly .w{color:var(--edge)}
+  .assembly .w.on{color:var(--ox);font-weight:700}
+  .progress{text-align:center;font-family:var(--mono);font-size:12px;color:var(--ink-faint);margin-bottom:6px}
+  .seal{display:none;align-items:center;gap:14px;margin-top:16px;animation:pop .5s ease both}.seal.show{display:flex}
+  .seal .wax{width:66px;height:66px;flex:none;border-radius:50%;background:radial-gradient(circle at 38% 34%,#c0432f,var(--ox) 60%,#6e1f17);color:#f3d9c8;display:grid;place-items:center;font-family:var(--display);font-weight:700;font-size:12px;letter-spacing:.04em;box-shadow:0 6px 16px -8px rgba(110,31,23,.8),inset 0 2px 4px rgba(255,255,255,.25);transform:rotate(-7deg)}
+  .seal .msg b{font-family:var(--display);font-size:21px;color:var(--ox)}
+  .flagline{font-family:var(--mono);font-size:15px;color:var(--ox);background:#f7efda;border:1px solid var(--brass);border-radius:8px;padding:8px 12px;display:inline-block;margin-top:8px;word-break:break-all}
+  @keyframes pop{0%{transform:scale(.7);opacity:0}60%{transform:scale(1.06)}100%{transform:scale(1);opacity:1}}
+  details{margin-top:14px;border-top:1px solid var(--rule-soft);padding-top:10px}
+  details summary{cursor:pointer;font-family:var(--mono);font-size:12px;letter-spacing:.06em;color:var(--teal);list-style:none}
+  details summary::-webkit-details-marker{display:none}
+  details summary::before{content:"▸ ";color:var(--brass)} details[open] summary::before{content:"▾ "}
+  details table{border-collapse:collapse;margin-top:10px;font-family:var(--mono);font-size:12.5px}
+  details td{border-bottom:1px solid var(--rule-soft);padding:5px 12px 5px 0;color:var(--ink-soft)}
+  details td b{color:var(--ox)}
+  footer{margin-top:40px;color:var(--ink-faint);font-size:12.5px;font-family:var(--mono);text-align:center;line-height:1.8}
+  .priv{display:inline-block;border:1px solid var(--edge);border-radius:999px;padding:4px 12px;margin-bottom:8px}
+  ::selection{background:rgba(138,42,32,.18)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <a class="back" href="../../">← back to The Bazaar</a>
+  <div class="kicker">The Bazaar · The Cabinet’s Answer · meta</div>
+  <header>
+    <h1>The <span class="no">Five Keys</span></h1>
+    <p class="lede">The capstone. Each cipher rung left you a key. Five locked fragments wait below —
+      one per technique. Open them all and the cabinet tells you what it remembers.</p>
+    <div class="meta">
+      <span class="chip grade">metapuzzle</span>
+      <span class="chip">⏱ <b>10–15 min</b></span>
+      <span class="chip">needs <b>all five cipher rungs</b></span>
+    </div>
+  </header>
+
+  <section class="step">
+    <div class="step-head"><span class="medallion">✦</span><h2>How the meta works</h2></div>
+    <p class="dropcap"><b>Each fragment below</b> was enciphered with one of the cabinet’s five
+      techniques, using the very key you recovered when you solved that rung. Type the right key into
+      each lock — the keyword you cracked, or the rotor settings you searched out — and the fragment
+      decodes to a single word. The five words, in order, are the cabinet’s final secret. Get all
+      five and the flag seals itself.</p>
+    <p class="hint" style="font-style:normal">Don’t remember a key? Each lock links back to its rung,
+      and there’s a spoiler at the very bottom — but try from memory first.</p>
+  </section>
+
+  <section class="step ox">
+    <div class="step-head"><span class="medallion">5</span><h2>The five locks</h2></div>
+    <p class="tagline">Enter each rung’s key. The fragment decodes live; a ✓ means it reads as a word.</p>
+    <div class="locks" id="locks"></div>
+  </section>
+
+  <section class="step ox">
+    <div class="step-head"><span class="medallion">✦</span><h2>The cabinet’s answer</h2></div>
+    <div class="progress" id="progress">0 of 5 fragments opened</div>
+    <div class="assembly" id="assembly"></div>
+    <div class="seal" id="seal"><div class="wax">SOLVED</div>
+      <div class="msg"><b>The cabinet is open.</b><br>
+        <span class="hint" style="font-style:normal">You’ve cracked every rung and the meta that binds them. The final flag:</span><br>
+        <span class="flagline" id="flagline"></span></div></div>
+    <details><summary>stuck? reveal the five keys (spoiler)</summary>
+      <table>
+        <tr><td><b>№1 Vigenère</b></td><td>keyword <b>LANTERN</b></td></tr>
+        <tr><td><b>№2 Substitution</b></td><td>keyword <b>NIGHTWATCH</b></td></tr>
+        <tr><td><b>№3 Transposition</b></td><td>keyword <b>QUAYSIDE</b></td></tr>
+        <tr><td><b>№4 Playfair</b></td><td>keyword <b>LIGHTHOUSE</b></td></tr>
+        <tr><td><b>№5 Rotor</b></td><td>wheels <b>II · I · III</b>, start <b>K · D · G</b></td></tr>
+      </table>
+    </details>
+  </section>
+
+  <footer>
+    <span class="priv">🔒 runs entirely in your browser — nothing is sent anywhere</span><br>
+    The Cabinet of Ciphers · the capstone of the cipher wing
+  </footer>
+</div>
+
+<script>
+const A=65,$=id=>document.getElementById(id);
+const onlyAZ=s=>s.toUpperCase().replace(/[^A-Z]/g,"");
+/* --- ported decode engines --- */
+function vig(t,k,dec){k=onlyAZ(k);if(!k)return"";let j=0,o="";for(const ch of t){const c=ch.charCodeAt(0),U=ch>='A'&&ch<='Z',L=ch>='a'&&ch<='z';if(U||L){const b=U?65:97;let kk=k.charCodeAt(j%k.length)-A;if(dec)kk=(26-kk)%26;o+=String.fromCharCode((c-b+kk)%26+b);j++;}else o+=ch;}return o;}
+function subAlpha(kw){let s="",k=onlyAZ(kw);for(const c of k)if(!s.includes(c))s+=c;for(let i=0;i<26;i++){const c=String.fromCharCode(A+i);if(!s.includes(c))s+=c;}return s;}
+function subDec(t,kw){if(!onlyAZ(kw))return"";const ca=subAlpha(kw);let o="";for(const ch of t){const U=ch.toUpperCase(),i=ca.indexOf(U);if(i>=0)o+=String.fromCharCode(A+i);else o+=ch;}return o;}
+const PAD="·";
+function colOrder(kw){const k=onlyAZ(kw);return k.split("").map((c,i)=>[c,i]).sort((a,b)=>a[0]<b[0]?-1:a[0]>b[0]?1:a[1]-b[1]).map(x=>x[1]);}
+function transDec(t,kw){const cols=onlyAZ(kw).length;if(!cols)return"";const rows=Math.ceil(t.length/cols),order=colOrder(kw),grid=new Array(t.length);let p=0;for(const c of order)for(let r=0;r<rows;r++){const idx=r*cols+c;if(idx<t.length)grid[idx]=t[p++];}return grid.join("").replace(new RegExp(PAD+"+$"),"");}
+function pfSq(kw){let s="",k=onlyAZ(kw).replace(/J/g,"I");for(const c of k)if(!s.includes(c))s+=c;for(let i=0;i<26;i++){const c=String.fromCharCode(A+i);if(c==='J')continue;if(!s.includes(c))s+=c;}return s;}
+function pfDec(t,kw){if(!onlyAZ(kw))return"";const sq=pfSq(kw),pos=c=>{const i=sq.indexOf(c);return[Math.floor(i/5),i%5];};const s=onlyAZ(t).replace(/J/g,"I");let o="";for(let i=0;i+1<s.length;i+=2){const[r1,c1]=pos(s[i]),[r2,c2]=pos(s[i+1]);if(r1===r2)o+=sq[r1*5+(c1+4)%5]+sq[r2*5+(c2+4)%5];else if(c1===c2)o+=sq[((r1+4)%5)*5+c1]+sq[((r2+4)%5)*5+c2];else o+=sq[r1*5+c2]+sq[r2*5+c1];}return o.replace(/X+$/,"");}
+const ROT={I:{w:"EKMFLGDQVZNTOWYHXUSPAIBRCJ",n:"Q"},II:{w:"AJDKSIRUXBLHWTMCQGZNPYFVOE",n:"E"},III:{w:"BDFHJLCPRTXVZNYEIWGAKMUSQO",n:"V"}};
+const REF="YRUHQSLDPXNGOKMIEBFZCWVJAT";
+function rotor(order,positions,text){const wir=order.map(n=>ROT[n].w),notch=order.map(n=>ROT[n].n.charCodeAt(0)-A),inv=wir.map(w=>{const a=[];for(let i=0;i<26;i++)a[w.charCodeAt(i)-A]=i;return a;});let p=positions.slice();function step(){const rN=p[2]===notch[2],mN=p[1]===notch[1];if(mN){p[0]=(p[0]+1)%26;p[1]=(p[1]+1)%26;}else if(rN)p[1]=(p[1]+1)%26;p[2]=(p[2]+1)%26;}function enc(ch){step();let c=ch.charCodeAt(0)-A;for(let i=2;i>=0;i--){c=(c+p[i])%26;c=wir[i].charCodeAt(c)-A;c=(c-p[i]+26)%26;}c=REF.charCodeAt(c)-A;for(let i=0;i<3;i++){c=(c+p[i])%26;c=inv[i][c];c=(c-p[i]+26)%26;}return String.fromCharCode(A+c);}let o="";for(const ch of onlyAZ(text))o+=enc(ch);return o;}
+
+async function sha256(str){const b=await crypto.subtle.digest("SHA-256",new TextEncoder().encode(str));return [...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,"0")).join("");}
+const FINAL_HASH="8e1a9bd166a46b10708472cf626481553d720ba5cfef622e42ea88ac349ccefd";
+
+const LOCKS=[
+ {id:'vig',no:'№1',name:'Vigenère',href:'../PUZ-0001-cipher-collection/',ct:'EHR',kind:'key',
+   decode:k=>vig('EHR',k,true),hash:'b9776d7ddf459c9ad5b0e1d6ac61e27befb5e99fd62446677600d7cacef544d0',ph:'the keyword'},
+ {id:'sub',no:'№2',name:'Substitution',href:'../PUZ-0002-substitution/',ct:'VCLFT',kind:'key',
+   decode:k=>subDec('VCLFT',k),hash:'5d5766cf2d78701614200418ee1450690d9af12c84d52545e4802f001ad53099',ph:'the keyword'},
+ {id:'trans',no:'№3',name:'Transposition',href:'../PUZ-0003-transposition/',ct:'BT·ECNAI',kind:'key',
+   decode:k=>transDec('BT·ECNAI',k),hash:'a6e42a44e79e131a63d2de54e7ecc391d7cd489abd78ddb7023a2a318450a550',ph:'the keyword'},
+ {id:'pf',no:'№4',name:'Playfair',href:'../PUZ-0004-playfair/',ct:'QAQOVMAQDG',kind:'key',
+   decode:k=>pfDec('QAQOVMAQDG',k),hash:'3ea6f83a9ed6c3f1fe71019dd202252348ccfb861a08fd9c9c5056e5cae54638',ph:'the keyword'},
+ {id:'rot',no:'№5',name:'Rotor machine',href:'../PUZ-0005-rotor/',ct:'ORTQRLUZYF',kind:'rotor',
+   decode:(ord,pos)=>rotor(ord,pos,'ORTQRLUZYF'),hash:'a0a44ed8cfc32b7e61befeb99bbff7706808c3fe4dcdf4750a8addb3ffcd4008'},
+];
+const NAMES=["I","II","III"];
+const solvedWords=new Array(LOCKS.length).fill(null);
+
+function buildLocks(){
+  $("locks").innerHTML=LOCKS.map((L,i)=>{
+    let input;
+    if(L.kind==='rotor'){
+      const sel=j=>`<div class="grp"><span>wheel ${j+1}</span><select data-i="${i}" data-r="${j}">${NAMES.map(n=>`<option>${n}</option>`).join("")}</select></div>`;
+      const pin=j=>`<div class="grp"><span>pos</span><input data-i="${i}" data-p="${j}" maxlength="1"></div>`;
+      input=`<label>wheel order &amp; start letters</label><div class="rotorrow">${sel(0)}${pin(0)}${sel(1)}${pin(1)}${sel(2)}${pin(2)}</div>`;
+    } else {
+      input=`<label>${L.ph}</label><input type="text" data-i="${i}" autocomplete="off" spellcheck="false" placeholder="key you recovered in ${L.no}">`;
+    }
+    return `<div class="lock" id="lock-${i}">
+      <div class="top"><span class="no">${L.no} · ${L.kind==='rotor'?'machine':'keyword'}</span>
+        <h3>${L.name}</h3><a class="ref" href="${L.href}">revisit ${L.no} →</a></div>
+      <div class="ct">${L.ct}</div>
+      ${input}
+      <div class="res"><span class="mark" id="mark-${i}">·</span><span class="word" id="word-${i}">—</span></div>
+    </div>`;
+  }).join("");
+  $("locks").querySelectorAll('input,select').forEach(el=>{
+    const ev=el.tagName==='SELECT'?'onchange':'oninput';
+    el[ev]=()=>handle(+el.dataset.i);
+  });
+}
+
+async function handle(i){
+  const L=LOCKS[i]; let out="";
+  const lock=$("lock-"+i);
+  if(L.kind==='rotor'){
+    const sels=[...lock.querySelectorAll('select')].map(s=>s.value);
+    const pins=[...lock.querySelectorAll('input')];
+    pins.forEach(p=>p.value=onlyAZ(p.value).slice(0,1));
+    const pos=pins.map(p=>{const v=onlyAZ(p.value)[0];return v?v.charCodeAt(0)-A:-1;});
+    if(pos.some(x=>x<0)){ setRes(i,"",false); return; }
+    out=L.decode(sels,pos);
+  } else {
+    const key=lock.querySelector('input').value;
+    out=L.decode(key);
+  }
+  const norm=onlyAZ(out).toLowerCase();
+  const ok = norm && (await sha256(norm))===L.hash;
+  setRes(i, out.toUpperCase(), ok);
+  solvedWords[i]= ok? norm : null;
+  updateAssembly();
+}
+function setRes(i,word,ok){
+  $("word-"+i).textContent=word||"—";
+  $("lock-"+i).classList.toggle("solved",!!ok);
+  $("mark-"+i).textContent=ok?"✓":"·";
+}
+async function updateAssembly(){
+  const n=solvedWords.filter(Boolean).length;
+  $("progress").textContent=`${n} of 5 fragments opened`;
+  $("assembly").innerHTML=LOCKS.map((L,i)=>{
+    const w=solvedWords[i];
+    return `<span class="w ${w?'on':''}">${w?w:'·····'}</span>`;
+  }).join('<span class="w">_</span>');
+  if(n===5){
+    const flag="CABINET{"+solvedWords.join("_")+"}";
+    if((await sha256(flag.toLowerCase().replace(/[^a-z0-9]/g,"")))===FINAL_HASH){
+      $("flagline").textContent=flag;
+      if(!$("seal").classList.contains("show")){ $("seal").classList.add("show"); $("seal").scrollIntoView({behavior:"smooth",block:"center"}); }
+    }
+  } else { $("seal").classList.remove("show"); }
+}
+buildLocks(); updateAssembly();
+</script>
+</body>
+</html>

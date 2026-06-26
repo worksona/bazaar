@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Hidden Drawer · №7 — Steganography</title>
+<style>
+  :root{
+    --paper:#efe6d2;--paper2:#e7dabd;--panel:#f3ecda;--edge:#d9c8a1;
+    --ink:#241f17;--ink-soft:#5a5142;--ink-faint:#8a7d66;
+    --rule:#cdbc96;--rule-soft:#dccfab;
+    --brass:#946312;--brass-bright:#b3832a;--ox:#8a2a20;--teal:#256b62;--good:#3c7a37;
+    --display:"Hoefler Text","Iowan Old Style","Palatino Linotype",Palatino,"Book Antiqua",Georgia,serif;
+    --body:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,"Times New Roman",serif;
+    --mono:ui-monospace,"SF Mono",SFMono-Regular,Menlo,Monaco,Consolas,monospace;
+    --shadow:0 1px 0 rgba(255,253,245,.7) inset,0 14px 30px -22px rgba(40,30,10,.6);
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{margin:0;color:var(--ink);font-family:var(--body);line-height:1.62;font-size:17px;background:radial-gradient(120% 80% at 50% -10%,#f6efdd 0%,var(--paper) 55%,#e7dcc2 100%) fixed;}
+  body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:0;mix-blend-mode:multiply;opacity:.5;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.045'/%3E%3C/svg%3E");}
+  .wrap{position:relative;z-index:1;max-width:840px;margin:0 auto;padding:30px 22px 110px}
+  a{color:var(--teal)}
+  .back{font-family:var(--mono);font-size:12px;letter-spacing:.06em;text-transform:uppercase;text-decoration:none;color:var(--ink-faint)}
+  .back:hover{color:var(--brass)}
+  .kicker{font-family:var(--mono);font-size:11px;letter-spacing:.28em;text-transform:uppercase;color:var(--brass);margin:18px 0 8px}
+  header h1{font-family:var(--display);font-weight:600;font-size:clamp(30px,6vw,46px);line-height:1.05;margin:0 0 8px}
+  header h1 .no{color:var(--ox)}
+  .lede{font-size:18px;color:var(--ink-soft);font-style:italic;margin:0 0 14px;max-width:56ch}
+  .meta{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:6px}
+  .chip{font-family:var(--mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;border:1px solid var(--edge);background:var(--panel);border-radius:999px;padding:4px 12px;color:var(--ink-soft)}
+  .chip.grade{border-color:var(--brass);color:var(--brass)}.chip b{color:var(--ink)}
+  nav.path{position:sticky;top:0;z-index:5;margin:22px -22px 0;padding:10px 22px;background:linear-gradient(var(--paper),rgba(239,230,210,.86));backdrop-filter:blur(6px);border-bottom:1px solid var(--rule)}
+  nav.path ol{list-style:none;display:flex;gap:6px;margin:0;padding:0;flex-wrap:wrap;font-family:var(--mono);font-size:11.5px;letter-spacing:.04em;text-transform:uppercase}
+  nav.path a{display:flex;align-items:center;gap:8px;text-decoration:none;color:var(--ink-faint);padding:6px 11px;border-radius:8px;border:1px solid transparent}
+  nav.path a .n{width:19px;height:19px;border-radius:50%;border:1px solid var(--edge);display:grid;place-items:center;font-size:10px;color:var(--ink-soft)}
+  nav.path a:hover{color:var(--ink);background:#f7f0de}
+  nav.path a.active{color:var(--ox);border-color:var(--rule);background:#f7efdb}
+  nav.path a.active .n{border-color:var(--ox);background:var(--ox);color:#fbf3e3}
+  .step{position:relative;background:var(--panel);border:1px solid var(--edge);border-radius:14px;padding:26px 26px 24px;margin:26px 0;box-shadow:var(--shadow)}
+  .step::after{content:"";position:absolute;inset:6px;border:1px solid var(--rule-soft);border-radius:9px;pointer-events:none}
+  .step>*{position:relative}
+  .step-head{display:flex;align-items:baseline;gap:14px;margin:0 0 4px}
+  .medallion{flex:none;width:34px;height:34px;border-radius:50%;display:grid;place-items:center;font-family:var(--mono);font-size:14px;font-weight:700;color:#fbf3e3;background:var(--brass);box-shadow:0 0 0 3px #f3ecda,0 0 0 4px var(--brass)}
+  .step.teal .medallion{background:var(--teal);box-shadow:0 0 0 3px #f3ecda,0 0 0 4px var(--teal)}
+  .step.ox .medallion{background:var(--ox);box-shadow:0 0 0 3px #f3ecda,0 0 0 4px var(--ox)}
+  .step h2{font-family:var(--display);font-weight:600;font-size:25px;margin:0}
+  .tagline{color:var(--ink-soft);font-style:italic;margin:2px 0 18px;font-size:15.5px}
+  h3{font-family:var(--mono);font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--teal);margin:22px 0 8px}
+  .step.ox h3{color:var(--ox)}
+  p{margin:0 0 12px}
+  .dropcap::first-letter{float:left;font-family:var(--display);font-size:58px;line-height:.78;font-weight:600;padding:6px 10px 0 0;color:var(--ox)}
+  label{display:block;font-family:var(--mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-faint);margin:14px 0 5px}
+  textarea,input[type=text]{width:100%;background:#fbf4e2;color:var(--ink);border:1px solid var(--edge);border-radius:9px;padding:11px 12px;font-family:var(--mono);font-size:14px;line-height:1.5}
+  textarea{min-height:60px;resize:vertical}
+  input:focus,textarea:focus{outline:none;border-color:var(--brass);box-shadow:0 0 0 3px rgba(148,99,18,.14)}
+  .controls{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin:14px 0 0}
+  .btn{font-family:var(--mono);font-size:12px;letter-spacing:.06em;font-weight:700;cursor:pointer;border-radius:9px;padding:10px 15px;border:1px solid transparent;transition:transform .06s,filter .15s}
+  .btn:active{transform:translateY(1px)}
+  .btn--brass{background:var(--brass);color:#fbf3e3}.btn--brass:hover{filter:brightness(1.08)}
+  .btn--ox{background:var(--ox);color:#fbf3e3}.btn--ox:hover{filter:brightness(1.08)}
+  .btn--teal{background:var(--teal);color:#fbf3e3}.btn--teal:hover{filter:brightness(1.08)}
+  .btn--ghost{background:transparent;border:1px solid var(--edge);color:var(--ink-soft)}.btn--ghost:hover{border-color:var(--brass);color:var(--brass)}
+  .hint{color:var(--ink-faint);font-size:13px;font-style:italic}.mono{font-family:var(--mono)}
+  .out{white-space:pre-wrap;word-break:break-word;background:#fbf4e2;border:1px solid var(--edge);border-radius:9px;padding:12px;font-family:var(--mono);font-size:14px;min-height:44px}
+  .callout{display:flex;gap:12px;align-items:flex-start;background:#fbf4e2;border:1px solid var(--edge);border-left:4px solid var(--teal);border-radius:9px;padding:13px 15px;margin-top:14px;font-size:15px}
+  .callout .big{font-family:var(--display);font-size:30px;line-height:1;color:var(--teal);font-weight:700}
+  .imgs{display:flex;gap:18px;flex-wrap:wrap;margin-top:10px}
+  .imgcard{flex:1;min-width:220px}
+  .imgcard .cap{font-family:var(--mono);font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-faint);margin-bottom:6px}
+  canvas{image-rendering:pixelated;width:100%;max-width:340px;height:auto;border:1px solid var(--edge);border-radius:8px;background:#2a2018;display:block}
+  details{margin-top:14px;border-top:1px solid var(--rule-soft);padding-top:10px}
+  details summary{cursor:pointer;font-family:var(--mono);font-size:12px;letter-spacing:.06em;color:var(--teal);list-style:none}
+  details summary::-webkit-details-marker{display:none}
+  details summary::before{content:"▸ ";color:var(--brass)} details[open] summary::before{content:"▾ "}
+  .flagbox{display:flex;gap:10px;flex-wrap:wrap;align-items:stretch;margin-top:8px}.flagbox input{flex:1;min-width:240px}
+  .verdict{margin-top:12px;font-family:var(--mono);font-size:14px;min-height:22px}.verdict.ok{color:var(--good)}.verdict.no{color:var(--ox)}
+  .seal{display:none;align-items:center;gap:14px;margin-top:14px;animation:pop .5s ease both}.seal.show{display:flex}
+  .seal .wax{width:62px;height:62px;flex:none;border-radius:50%;background:radial-gradient(circle at 38% 34%,#c0432f,var(--ox) 60%,#6e1f17);color:#f3d9c8;display:grid;place-items:center;font-family:var(--display);font-weight:700;font-size:13px;letter-spacing:.05em;box-shadow:0 6px 16px -8px rgba(110,31,23,.8),inset 0 2px 4px rgba(255,255,255,.25);transform:rotate(-7deg)}
+  .seal .msg b{font-family:var(--display);font-size:20px;color:var(--ox)}
+  @keyframes pop{0%{transform:scale(.7);opacity:0}60%{transform:scale(1.06)}100%{transform:scale(1);opacity:1}}
+  footer{margin-top:40px;color:var(--ink-faint);font-size:12.5px;font-family:var(--mono);text-align:center;line-height:1.8}
+  .priv{display:inline-block;border:1px solid var(--edge);border-radius:999px;padding:4px 12px;margin-bottom:8px}
+  ::selection{background:rgba(138,42,32,.18)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <a class="back" href="../../">← back to The Bazaar</a>
+  <div class="kicker">The Bazaar · The Hidden Drawer · steganography</div>
+  <header>
+    <h1>Hidden in <span class="no">Plain Sight</span></h1>
+    <p class="lede">A different secret entirely. The cipher rungs scramble a message; here the
+      message is in plain view — you just can’t see it. The puzzle isn’t “decode” but “prove there’s
+      anything there at all.”</p>
+    <div class="meta">
+      <span class="chip grade">difficulty · beginner</span>
+      <span class="chip">⏱ <b>15–20 min</b></span>
+      <span class="chip">you’ll learn <b>LSB steganography + steganalysis</b></span>
+    </div>
+  </header>
+
+  <nav class="path" aria-label="steps"><ol>
+    <li><a href="#s1"><span class="n">1</span> Learn</a></li>
+    <li><a href="#s2"><span class="n">2</span> Hide &amp; reveal</a></li>
+    <li><a href="#s3"><span class="n">3</span> Analyze</a></li>
+    <li><a href="#s4"><span class="n">4</span> The challenge</a></li>
+  </ol></nav>
+
+  <p class="hint" style="margin-top:18px">New here? Read top to bottom — you’ll hide a message in a
+    picture, learn the trick that exposes one, then pull a flag out of an innocent-looking image.</p>
+
+  <!-- STEP 1 -->
+  <section class="step" id="s1">
+    <div class="step-head"><span class="medallion">1</span><h2>Learn — secrecy vs. hiding</h2></div>
+    <p class="tagline">Cryptography hides a message’s <em>meaning</em>. Steganography hides its <em>existence</em>.</p>
+    <p class="dropcap"><b>Every pixel</b> in a colour image is three numbers — red, green, blue —
+      each 0–255. The <em>lowest</em> bit of each number barely matters: nudging a red value from 154
+      to 155 is a change of one part in 256, invisible to the eye. So you can overwrite those lowest
+      bits with the bits of a secret message, and the picture looks <em>exactly</em> the same. That’s
+      <b>LSB steganography</b> — least-significant-bit hiding.</p>
+    <h3>Why it changes the puzzle</h3>
+    <p>A ciphertext announces itself — it’s obviously scrambled. A stego image doesn’t: it looks like
+      an ordinary photo. So the attacker’s first job isn’t decoding, it’s <b>detection</b> — is there
+      a message in here at all? The tell is in the lowest bits: in a normal image they’re close to
+      random noise, but hidden data leaves a tell-tale pattern. Pull the lowest bit out of every pixel
+      and look at it directly, and a hidden message lights up.</p>
+    <div class="callout"><span class="big">“</span><div><b>Best use today:</b> steganography and
+      cryptography stack beautifully — encrypt first, then hide the ciphertext. An eavesdropper has to
+      both <em>notice</em> the message and <em>break</em> it. Spies, watermarkers, and CTF authors all
+      lean on exactly this.</div></div>
+  </section>
+
+  <!-- STEP 2 -->
+  <section class="step teal" id="s2">
+    <div class="step-head"><span class="medallion">2</span><h2>Hide &amp; reveal — the engine</h2></div>
+    <p class="tagline">Type a message; watch it vanish into a picture that looks unchanged.</p>
+    <label for="msg">message to hide</label>
+    <textarea id="msg" spellcheck="false">meet at the lighthouse after dark</textarea>
+    <div class="controls" style="margin-top:6px">
+      <button id="hide" class="btn btn--teal">hide it in the picture →</button>
+      <button id="reveal" class="btn btn--ghost">reveal hidden text</button>
+    </div>
+    <div class="imgs">
+      <div class="imgcard"><div class="cap">cover — the plain picture</div><canvas id="cv-cover" width="80" height="48"></canvas></div>
+      <div class="imgcard"><div class="cap">stego — message hidden inside</div><canvas id="cv-stego" width="80" height="48"></canvas></div>
+    </div>
+    <label for="revout" style="margin-top:14px">revealed text</label>
+    <div id="revout" class="out mono">—</div>
+    <p class="hint">Look hard at the two pictures — they’re pixel-for-pixel almost identical. The whole
+      message is living in bits your eye can’t resolve.</p>
+  </section>
+
+  <!-- STEP 3 -->
+  <section class="step ox" id="s3">
+    <div class="step-head"><span class="medallion">3</span><h2>Analyze — make the lowest bits visible</h2></div>
+    <p class="tagline">The steganalyst’s trick: throw away the top 7 bits and amplify the last one.</p>
+    <p class="hint" style="font-style:normal">This takes the picture above and rebuilds it using only
+      each pixel’s lowest bit — black for 0, white for 1. In a normal photo that’s near-random fuzz;
+      where a message hides, structure appears. Hide a message in Station 2, then amplify and watch
+      the band of hidden data show up.</p>
+    <div class="controls" style="margin-top:6px"><button id="amp2" class="btn btn--ox">amplify the lowest bits →</button></div>
+    <div class="imgs">
+      <div class="imgcard"><div class="cap">lowest-bit plane of the stego image</div><canvas id="cv-amp" width="80" height="48"></canvas></div>
+    </div>
+    <div class="callout"><span class="big">“</span><div>That bright, busy region is the hidden
+      payload betraying itself. A flat, empty plane means (probably) nothing’s hidden. This single view
+      is how most beginner stego is caught.</div></div>
+  </section>
+
+  <!-- STEP 4 -->
+  <section class="step ox" id="s4">
+    <div class="step-head"><span class="medallion">4</span><h2>The challenge — an innocent picture</h2></div>
+    <p class="tagline">This image was left in the cabinet’s drawer. It looks like nothing. It isn’t.</p>
+    <div class="imgs">
+      <div class="imgcard"><div class="cap">the suspect image</div><canvas id="cv-chal" width="80" height="48"></canvas></div>
+      <div class="imgcard"><div class="cap">its lowest-bit plane</div><canvas id="cv-chalamp" width="80" height="48"></canvas></div>
+    </div>
+    <div class="controls">
+      <button id="ampchal" class="btn btn--ox">amplify the lowest bits →</button>
+      <button id="extract" class="btn btn--brass">extract the hidden text →</button>
+    </div>
+    <label for="exout" style="margin-top:14px">extracted message</label>
+    <div id="exout" class="out mono">—</div>
+    <div class="verdict" id="verdict"></div>
+    <div class="seal" id="seal"><div class="wax">SOLVED</div><div class="msg"><b>The drawer gives up its secret.</b><br><span class="hint" style="font-style:normal">№7 complete — you proved a message was there, then read it straight out of the pixels.</span></div></div>
+    <p class="hint" style="margin-top:12px">The extracted text is the flag, shaped like
+      <span class="mono">CABINET{…}</span>.</p>
+    <details><summary>how does “extract” know where to look? (spoiler)</summary>
+      <p class="hint" style="margin:10px 0 0">The message was written into the lowest bit of each
+        red/green/blue value, in reading order, prefixed by a 32-bit length. Extract reads that length,
+        then pulls exactly that many bytes back out of the lowest bits and decodes them as text.</p></details>
+  </section>
+
+  <footer>
+    <span class="priv">🔒 runs entirely in your browser — nothing is sent anywhere</span><br>
+    The Bazaar · the hidden drawer · <a href="../../">back to the cabinet →</a>
+  </footer>
+</div>
+
+<script>
+const $=id=>document.getElementById(id);
+const W=80,H=48;
+const FLAG_HASH="21d76b3955dc8e47a9cf77802eaf35a27bcfefaa1ba6925dad25d8f23483e28f";
+const CHAL_B64="KDx4/yo8eP8sPHj/Ljx4/zA8ev8yPHr/NDx6/zY8fP86PHz/PT19/z88fv9BPH7/Qjx//0U8gf9GPID/SDyB/0w9gv9OPIL/UTyC/1M8gv9VPIT/VzyF/1g8hf9bPYb/Xj2G/2A8h/9iPYj/ZTyJ/2Y9iP9oPIv/az2L/2w9i/9wPY3/cj2M/3Q8jP93PYz/eTyO/3s8j/99PI7/fzyQ/4I9kf+EPJH/hjyS/4k9kv+KPZL/jTyV/488lf+RPZT/lD2W/5c9l/+ZPZb/mz2W/508mP+fPJn/oTyZ/6M9mv+mPZr/qT2b/6s9nP+tPZ3/rjyc/7A8n/+zPJ//tTye/7g9of+6PKD/vD2g/789oP/BPKL/wzyj/8U8o//HPaT/yj2k/809pf/PPab/0T2n/9I8p//VPKn/1zyp/9g8qf8oP3n/Kj55/y0/eP8vP3r/MT56/zI+e/81P3z/Nz58/zo/ff89P3//Pj9+/0A+fv9CPoD/RD6A/0Y+gP9IPoL/TD6C/04+gv9QPoL/Uj6E/1Q+hP9WPoT/WD6G/1o+hv9ePob/YD6I/2I+iP9kPoj/Zj6K/2g+iv9qPor/bD6M/3A+jP9yPoz/dD6M/3Y+jv94Po7/ej6O/3w+kP9+PpD/gj6Q/4Q+kv+GPpL/iD6S/4o+lP+MPpT/jj6U/5A+lv+UPpb/lj6W/5g+lv+aPpj/nD6Y/54+mP+gPpr/oj6a/6Y+mv+oPpz/qj6c/6w+nP+uPp7/sD6e/7I+nv+0PqD/uD6g/7o+oP+8PqD/vj6i/8A+ov/CPqL/xD6k/8Y+pP/KPqT/zD6m/84+pv/QPqb/0j6o/9Q+qP/WPqj/2D6q/yhCeP8qQnj/LEJ6/y5Cev8wQnr/MkJ8/zRCfP82Qnz/OkJ+/zxCfv8+Qn7/QEKA/0JCgP9EQoD/RkKC/0hCgv9MQoL/TkKC/1BChP9SQoT/VEKE/1ZChv9YQob/WkKG/15CiP9gQoj/YkKI/2RCiv9mQor/aEKK/2pCjP9sQoz/cEKM/3JCjP90Qo7/dkKO/3hCjv96QpD/fEKQ/35CkP+CQpL/hEKS/4ZCkv+IQpT/ikKU/4xClP+OQpb/kEKW/5RClv+WQpb/mEKY/5pCmP+cQpj/nkKa/6BCmv+iQpr/pkKc/6hCnP+qQpz/rEKe/65Cnv+wQp7/skKg/7RCoP+4QqD/ukKg/7xCov++QqL/wEKi/8JCpP/EQqT/xkKk/8pCpv/MQqb/zkKm/9BCqP/SQqj/1EKo/9ZCqv/YQqr/KER4/ypEev8sRHr/LkR6/zBEfP8yRHz/NER8/zZEfv86RH7/PER+/z5EgP9ARID/QkSA/0REgv9GRIL/SESC/0xEgv9ORIT/UESE/1JEhP9URIb/VkSG/1hEhv9aRIj/XkSI/2BEiP9iRIr/ZESK/2ZEiv9oRIz/akSM/2xEjP9wRIz/ckSO/3REjv92RI7/eESQ/3pEkP98RJD/fkSS/4JEkv+ERJL/hkSU/4hElP+KRJT/jESW/45Elv+QRJb/lESW/5ZEmP+YRJj/mkSY/5xEmv+eRJr/oESa/6JEnP+mRJz/qESc/6pEnv+sRJ7/rkSe/7BEoP+yRKD/tESg/7hEoP+6RKL/vESi/75Eov/ARKT/wkSk/8REpP/GRKb/ykSm/8xEpv/ORKj/0ESo/9JEqP/URKr/1kSq/9hEqv8oSHr/Kkh6/yxIev8uSHz/MEh8/zJIfP80SH7/Nkh+/zpIfv88SID/PkiA/0BIgP9CSIL/REiC/0ZIgv9ISIL/TEiE/05IhP9QSIT/UkiG/1RIhv9WSIb/WEiI/1pIiP9eSIj/YEiK/2JIiv9kSIr/ZkiM/2hIjP9qSIz/bEiM/3BIjv9ySI7/dEiO/3ZIkP94SJD/ekiQ/3xIkv9+SJL/gkiS/4RIlP+GSJT/iEiU/4pIlv+MSJb/jkiW/5BIlv+USJj/lkiY/5hImP+aSJr/nEia/55Imv+gSJz/okic/6ZInP+oSJ7/qkie/6xInv+uSKD/sEig/7JIoP+0SKD/uEii/7pIov+8SKL/vkik/8BIpP/CSKT/xEim/8ZIpv/KSKb/zEio/85IqP/QSKj/0kiq/9RIqv/WSKr/2Eiq/yhKev8qSnr/LEp8/y5KfP8wSnz/Mkp+/zRKfv82Sn7/OkqA/zxKgP8+SoD/QEqC/0JKgv9ESoL/RkqC/0hKhP9MSoT/TkqE/1BKhv9SSob/VEqG/1ZKiP9YSoj/WkqI/15Kiv9gSor/YkqK/2RKjP9mSoz/aEqM/2pKjP9sSo7/cEqO/3JKjv90SpD/dkqQ/3hKkP96SpL/fEqS/35Kkv+CSpT/hEqU/4ZKlP+ISpb/ikqW/4xKlv+OSpb/kEqY/5RKmP+WSpj/mEqa/5pKmv+cSpr/nkqc/6BKnP+iSpz/pkqe/6hKnv+qSp7/rEqg/65KoP+wSqD/skqg/7RKov+4SqL/ukqi/7xKpP++SqT/wEqk/8JKpv/ESqb/xkqm/8pKqP/MSqj/zkqo/9BKqv/SSqr/1Eqq/9ZKqv/YSqz/KE56/ypOfP8sTnz/Lk58/zBOfv8yTn7/NE5+/zZOgP86ToD/PE6A/z5Ogv9AToL/Qk6C/0ROgv9GToT/SE6E/0xOhP9OTob/UE6G/1JOhv9UToj/Vk6I/1hOiP9aTor/Xk6K/2BOiv9iToz/ZE6M/2ZOjP9oToz/ak6O/2xOjv9wTo7/ck6Q/3ROkP92TpD/eE6S/3pOkv98TpL/fk6U/4JOlP+ETpT/hk6W/4hOlv+KTpb/jE6W/45OmP+QTpj/lE6Y/5ZOmv+YTpr/mk6a/5xOnP+eTpz/oE6c/6JOnv+mTp7/qE6e/6pOoP+sTqD/rk6g/7BOoP+yTqL/tE6i/7hOov+6TqT/vE6k/75OpP/ATqb/wk6m/8ROpv/GTqj/yk6o/8xOqP/OTqr/0E6q/9JOqv/UTqr/1k6s/9hOrP8oUHz/KlB8/yxQfP8uUH7/MFB+/zJQfv80UID/NlCA/zpQgP88UIL/PlCC/0BQgv9CUIL/RFCE/0ZQhP9IUIT/TFCG/05Qhv9QUIb/UlCI/1RQiP9WUIj/WFCK/1pQiv9eUIr/YFCM/2JQjP9kUIz/ZlCM/2hQjv9qUI7/bFCO/3BQkP9yUJD/dFCQ/3ZQkv94UJL/elCS/3xQlP9+UJT/glCU/4RQlv+GUJb/iFCW/4pQlv+MUJj/jlCY/5BQmP+UUJr/llCa/5hQmv+aUJz/nFCc/55QnP+gUJ7/olCe/6ZQnv+oUKD/qlCg/6xQoP+uUKD/sFCi/7JQov+0UKL/uFCk/7pQpP+8UKT/vlCm/8BQpv/CUKb/xFCo/8ZQqP/KUKj/zFCq/85Qqv/QUKr/0lCq/9RQrP/WUKz/2FCs/yhUfP8qVHz/LFR+/y5Ufv8wVH7/MlSA/zRUgP82VID/OlSC/zxUgv8+VIL/QFSC/0JUhP9EVIT/RlSE/0hUhv9MVIb/TlSG/1BUiP9SVIj/VFSI/1ZUiv9YVIr/WlSK/15UjP9gVIz/YlSM/2RUjP9mVI7/aFSO/2pUjv9sVJD/cFSQ/3JUkP90VJL/dlSS/3hUkv96VJT/fFSU/35UlP+CVJb/hFSW/4ZUlv+IVJb/ilSY/4xUmP+OVJj/kFSa/5RUmv+WVJr/mFSc/5pUnP+cVJz/nlSe/6BUnv+iVJ7/plSg/6hUoP+qVKD/rFSg/65Uov+wVKL/slSi/7RUpP+4VKT/ulSk/7xUpv++VKb/wFSm/8JUqP/EVKj/xlSo/8pUqv/MVKr/zlSq/9BUqv/SVKz/1FSs/9ZUrP/YVK7/KFh8/ypYfv8sWH7/Llh+/zBYgP8yWID/NFiA/zZYgv86WIL/PFiC/z5Ygv9AWIT/QliE/0RYhP9GWIb/SFiG/0xYhv9OWIj/UFiI/1JYiP9UWIr/VliK/1hYiv9aWIz/XliM/2BYjP9iWIz/ZFiO/2ZYjv9oWI7/aliQ/2xYkP9wWJD/cliS/3RYkv92WJL/eFiU/3pYlP98WJT/fliW/4JYlv+EWJb/hliW/4hYmP+KWJj/jFiY/45Ymv+QWJr/lFia/5ZYnP+YWJz/mlic/5xYnv+eWJ7/oFie/6JYoP+mWKD/qFig/6pYoP+sWKL/rlii/7BYov+yWKT/tFik/7hYpP+6WKb/vFim/75Ypv/AWKj/wlio/8RYqP/GWKr/yliq/8xYqv/OWKr/0Fis/9JYrP/UWKz/1liu/9hYrv8oWn7/Klp+/yxafv8uWoD/MFqA/zJagP80WoL/NlqC/zpagv88WoL/PlqE/0BahP9CWoT/RFqG/0Zahv9IWob/TFqI/05aiP9QWoj/UlqK/1Raiv9WWor/WFqM/1pajP9eWoz/YFqM/2Jajv9kWo7/ZlqO/2hakP9qWpD/bFqQ/3Bakv9yWpL/dFqS/3ZalP94WpT/elqU/3xalv9+Wpb/glqW/4Ralv+GWpj/iFqY/4pamP+MWpr/jlqa/5Bamv+UWpz/llqc/5hanP+aWp7/nFqe/55anv+gWqD/olqg/6ZaoP+oWqD/qlqi/6xaov+uWqL/sFqk/7JapP+0WqT/uFqm/7papv+8Wqb/vlqo/8BaqP/CWqj/xFqq/8Zaqv/KWqr/zFqq/85arP/QWqz/0lqs/9Rarv/WWq7/2Fqu/yhefv8qXn7/LF6A/y5egP8wXoD/Ml6C/zRegv82XoL/Ol6C/zxehP8+XoT/QF6E/0Jehv9EXob/Rl6G/0heiP9MXoj/Tl6I/1Beiv9SXor/VF6K/1ZejP9YXoz/Wl6M/15ejP9gXo7/Yl6O/2Rejv9mXpD/aF6Q/2pekP9sXpL/cF6S/3Jekv90XpT/dl6U/3helP96Xpb/fF6W/35elv+CXpb/hF6Y/4ZemP+IXpj/il6a/4xemv+OXpr/kF6c/5RenP+WXpz/mF6e/5penv+cXp7/nl6g/6BeoP+iXqD/pl6g/6heov+qXqL/rF6i/65epP+wXqT/sl6k/7Repv+4Xqb/ul6m/7xeqP++Xqj/wF6o/8Jeqv/EXqr/xl6q/8peqv/MXqz/zl6s/9BerP/SXq7/1F6u/9Zerv/YXrD/KGB+/ypggP8sYID/LmCA/zBggv8yYIL/NGCC/zZggv86YIT/PGCE/z5ghP9AYIb/QmCG/0Rghv9GYIj/SGCI/0xgiP9OYIr/UGCK/1Jgiv9UYIz/VmCM/1hgjP9aYIz/XmCO/2Bgjv9iYI7/ZGCQ/2ZgkP9oYJD/amCS/2xgkv9wYJL/cmCU/3RglP92YJT/eGCW/3pglv98YJb/fmCW/4JgmP+EYJj/hmCY/4hgmv+KYJr/jGCa/45gnP+QYJz/lGCc/5Zgnv+YYJ7/mmCe/5xgoP+eYKD/oGCg/6JgoP+mYKL/qGCi/6pgov+sYKT/rmCk/7BgpP+yYKb/tGCm/7hgpv+6YKj/vGCo/75gqP/AYKr/wmCq/8Rgqv/GYKr/ymCs/8xgrP/OYKz/0GCu/9Jgrv/UYK7/1mCw/9hgsP8oZID/KmSA/yxkgP8uZIL/MGSC/zJkgv80ZIL/NmSE/zpkhP88ZIT/PmSG/0Bkhv9CZIb/RGSI/0ZkiP9IZIj/TGSK/05kiv9QZIr/UmSM/1RkjP9WZIz/WGSM/1pkjv9eZI7/YGSO/2JkkP9kZJD/ZmSQ/2hkkv9qZJL/bGSS/3BklP9yZJT/dGSU/3Zklv94ZJb/emSW/3xklv9+ZJj/gmSY/4RkmP+GZJr/iGSa/4pkmv+MZJz/jmSc/5BknP+UZJ7/lmSe/5hknv+aZKD/nGSg/55koP+gZKD/omSi/6Zkov+oZKL/qmSk/6xkpP+uZKT/sGSm/7Jkpv+0ZKb/uGSo/7pkqP+8ZKj/vmSq/8Bkqv/CZKr/xGSq/8ZkrP/KZKz/zGSs/85krv/QZK7/0mSu/9RksP/WZLD/2GSw/yhmgP8qZoD/LGaC/y5mgv8wZoL/MmaC/zRmhP82ZoT/OmaE/zxmhv8+Zob/QGaG/0JmiP9EZoj/RmaI/0hmiv9MZor/TmaK/1BmjP9SZoz/VGaM/1ZmjP9YZo7/WmaO/15mjv9gZpD/YmaQ/2RmkP9mZpL/aGaS/2pmkv9sZpT/cGaU/3JmlP90Zpb/dmaW/3hmlv96Zpb/fGaY/35mmP+CZpj/hGaa/4Zmmv+IZpr/imac/4xmnP+OZpz/kGae/5Rmnv+WZp7/mGag/5pmoP+cZqD/nmag/6Bmov+iZqL/pmai/6hmpP+qZqT/rGak/65mpv+wZqb/smam/7RmqP+4Zqj/umao/7xmqv++Zqr/wGaq/8Jmqv/EZqz/xmas/8pmrP/MZq7/zmau/9Bmrv/SZrD/1Gaw/9ZmsP/YZrL/KGqA/ypqgv8saoL/LmqC/zBqgv8yaoT/NGqE/zZqhP86aob/PGqG/z5qhv9Aaoj/QmqI/0RqiP9Gaor/SGqK/0xqiv9Oaoz/UGqM/1JqjP9Uaoz/VmqO/1hqjv9aao7/XmqQ/2BqkP9iapD/ZGqS/2Zqkv9oapL/amqU/2xqlP9wapT/cmqW/3Rqlv92apb/eGqW/3pqmP98apj/fmqY/4Jqmv+Eapr/hmqa/4hqnP+Kapz/jGqc/45qnv+Qap7/lGqe/5ZqoP+YaqD/mmqg/5xqoP+eaqL/oGqi/6Jqov+maqT/qGqk/6pqpP+saqb/rmqm/7Bqpv+yaqj/tGqo/7hqqP+6aqr/vGqq/75qqv/Aaqr/wmqs/8RqrP/Gaqz/ymqu/8xqrv/Oaq7/0Gqw/9JqsP/UarD/1mqy/9hqsv8oboL/Km6C/yxugv8uboL/MG6E/zJuhP80boT/Nm6G/zpuhv88bob/Pm6I/0BuiP9Cboj/RG6K/0Zuiv9Ibor/TG6M/05ujP9Qboz/Um6M/1Rujv9Wbo7/WG6O/1pukP9ebpD/YG6Q/2Jukv9kbpL/Zm6S/2hulP9qbpT/bG6U/3Bulv9ybpb/dG6W/3Zulv94bpj/em6Y/3xumP9+bpr/gm6a/4Rumv+Gbpz/iG6c/4punP+Mbp7/jm6e/5Bunv+UbqD/lm6g/5huoP+abqD/nG6i/55uov+gbqL/om6k/6ZupP+obqT/qm6m/6xupv+ubqb/sG6o/7JuqP+0bqj/uG6q/7puqv+8bqr/vm6q/8BurP/Cbqz/xG6s/8Zurv/Kbq7/zG6u/85usP/QbrD/0m6w/9Rusv/WbrL/2G6y/yhwgv8qcIL/LHCC/y5whP8wcIT/MnCE/zRwhv82cIb/OnCG/zxwiP8+cIj/QHCI/0Jwiv9EcIr/RnCK/0hwjP9McIz/TnCM/1BwjP9ScI7/VHCO/1Zwjv9YcJD/WnCQ/15wkP9gcJL/YnCS/2Rwkv9mcJT/aHCU/2pwlP9scJb/cHCW/3Jwlv90cJb/dnCY/3hwmP96cJj/fHCa/35wmv+CcJr/hHCc/4ZwnP+IcJz/inCe/4xwnv+OcJ7/kHCg/5RwoP+WcKD/mHCg/5pwov+ccKL/nnCi/6BwpP+icKT/pnCk/6hwpv+qcKb/rHCm/65wqP+wcKj/snCo/7Rwqv+4cKr/unCq/7xwqv++cKz/wHCs/8JwrP/EcK7/xnCu/8pwrv/McLD/znCw/9BwsP/ScLL/1HCy/9Zwsv/YcLT/KHSC/yp0gv8sdIT/LnSE/zB0hP8ydIb/NHSG/zZ0hv86dIj/PHSI/z50iP9AdIr/QnSK/0R0iv9GdIz/SHSM/0x0jP9OdIz/UHSO/1J0jv9UdI7/VnSQ/1h0kP9adJD/XnSS/2B0kv9idJL/ZHSU/2Z0lP9odJT/anSW/2x0lv9wdJb/cnSW/3R0mP92dJj/eHSY/3p0mv98dJr/fnSa/4J0nP+EdJz/hnSc/4h0nv+KdJ7/jHSe/450oP+QdKD/lHSg/5Z0oP+YdKL/mnSi/5x0ov+edKT/oHSk/6J0pP+mdKb/qHSm/6p0pv+sdKj/rnSo/7B0qP+ydKr/tHSq/7h0qv+6dKr/vHSs/750rP/AdKz/wnSu/8R0rv/GdK7/ynSw/8x0sP/OdLD/0HSy/9J0sv/UdLL/1nS0/9h0tP8odoL/KnaE/yx2hP8udoT/MHaG/zJ2hv80dob/NnaI/zp2iP88doj/PnaK/0B2iv9Cdor/RHaM/0Z2jP9Idoz/THaM/052jv9Qdo7/UnaO/1R2kP9WdpD/WHaQ/1p2kv9edpL/YHaS/2J2lP9kdpT/ZnaU/2h2lv9qdpb/bHaW/3B2lv9ydpj/dHaY/3Z2mP94dpr/enaa/3x2mv9+dpz/gnac/4R2nP+Gdp7/iHae/4p2nv+MdqD/jnag/5B2oP+UdqD/lnai/5h2ov+adqL/nHak/552pP+gdqT/onam/6Z2pv+odqb/qnao/6x2qP+udqj/sHaq/7J2qv+0dqr/uHaq/7p2rP+8dqz/vnas/8B2rv/Cdq7/xHau/8Z2sP/KdrD/zHaw/852sv/QdrL/0nay/9R2tP/WdrT/2Ha0/yh6hP8qeoT/LHqE/y56hv8weob/MnqG/zR6iP82eoj/OnqI/zx6iv8+eor/QHqK/0J6jP9Eeoz/RnqM/0h6jP9Meo7/TnqO/1B6jv9SepD/VHqQ/1Z6kP9YepL/WnqS/156kv9gepT/YnqU/2R6lP9mepb/aHqW/2p6lv9sepb/cHqY/3J6mP90epj/dnqa/3h6mv96epr/fHqc/356nP+Cepz/hHqe/4Z6nv+Iep7/inqg/4x6oP+OeqD/kHqg/5R6ov+WeqL/mHqi/5p6pP+ceqT/nnqk/6B6pv+ieqb/pnqm/6h6qP+qeqj/rHqo/656qv+weqr/snqq/7R6qv+4eqz/unqs/7x6rP++eq7/wHqu/8J6rv/EerD/xnqw/8p6sP/MerL/znqy/9B6sv/SerT/1Hq0/9Z6tP/YerT/KHyE/yp8hP8sfIb/LnyG/zB8hv8yfIj/NHyI/zZ8iP86fIr/PHyK/z58iv9AfIz/QnyM/0R8jP9GfIz/SHyO/0x8jv9OfI7/UHyQ/1J8kP9UfJD/VnyS/1h8kv9afJL/XnyU/2B8lP9ifJT/ZHyW/2Z8lv9ofJb/anyW/2x8mP9wfJj/cnyY/3R8mv92fJr/eHya/3p8nP98fJz/fnyc/4J8nv+EfJ7/hnye/4h8oP+KfKD/jHyg/458oP+QfKL/lHyi/5Z8ov+YfKT/mnyk/5x8pP+efKb/oHym/6J8pv+mfKj/qHyo/6p8qP+sfKr/rnyq/7B8qv+yfKr/tHys/7h8rP+6fKz/vHyu/758rv/AfK7/wnyw/8R8sP/GfLD/ynyy/8x8sv/OfLL/0Hy0/9J8tP/UfLT/1ny0/9h8tv8ogIT/KoCG/yyAhv8ugIb/MICI/zKAiP80gIj/NoCK/zqAiv88gIr/PoCM/0CAjP9CgIz/RICM/0aAjv9IgI7/TICO/06AkP9QgJD/UoCQ/1SAkv9WgJL/WICS/1qAlP9egJT/YICU/2KAlv9kgJb/ZoCW/2iAlv9qgJj/bICY/3CAmP9ygJr/dICa/3aAmv94gJz/eoCc/3yAnP9+gJ7/goCe/4SAnv+GgKD/iICg/4qAoP+MgKD/joCi/5CAov+UgKL/loCk/5iApP+agKT/nICm/56Apv+ggKb/ooCo/6aAqP+ogKj/qoCq/6yAqv+ugKr/sICq/7KArP+0gKz/uICs/7qArv+8gK7/voCu/8CAsP/CgLD/xICw/8aAsv/KgLL/zICy/86AtP/QgLT/0oC0/9SAtP/WgLb/2IC2/yiChv8qgob/LIKG/y6CiP8wgoj/MoKI/zSCiv82gor/OoKK/zyCjP8+goz/QIKM/0KCjP9Ego7/RoKO/0iCjv9MgpD/ToKQ/1CCkP9SgpL/VIKS/1aCkv9YgpT/WoKU/16ClP9ggpb/YoKW/2SClv9mgpb/aIKY/2qCmP9sgpj/cIKa/3KCmv90gpr/doKc/3iCnP96gpz/fIKe/36Cnv+Cgp7/hIKg/4aCoP+IgqD/ioKg/4yCov+OgqL/kIKi/5SCpP+WgqT/mIKk/5qCpv+cgqb/noKm/6CCqP+igqj/poKo/6iCqv+qgqr/rIKq/66Cqv+wgqz/soKs/7SCrP+4gq7/uoKu/7yCrv++grD/wIKw/8KCsP/EgrL/xoKy/8qCsv/MgrT/zoK0/9CCtP/SgrT/1IK2/9aCtv/Ygrb/KIaG/yqGhv8shoj/LoaI/zCGiP8yhor/NIaK/zaGiv86hoz/PIaM/z6GjP9Ahoz/QoaO/0SGjv9Gho7/SIaQ/0yGkP9OhpD/UIaS/1KGkv9UhpL/VoaU/1iGlP9ahpT/XoaW/2CGlv9ihpb/ZIaW/2aGmP9ohpj/aoaY/2yGmv9whpr/coaa/3SGnP92hpz/eIac/3qGnv98hp7/foae/4KGoP+EhqD/hoag/4iGoP+KhqL/jIai/46Gov+QhqT/lIak/5aGpP+Yhqb/moam/5yGpv+ehqj/oIao/6KGqP+mhqr/qIaq/6qGqv+shqr/roas/7CGrP+yhqz/tIau/7iGrv+6hq7/vIaw/76GsP/AhrD/woay/8SGsv/GhrL/yoa0/8yGtP/OhrT/0Ia0/9KGtv/Uhrb/1oa2/9iGuP8oiob/KoqI/yyKiP8uioj/MIqK/zKKiv80ior/NoqM/zqKjP88ioz/PoqM/0CKjv9Cio7/RIqO/0aKkP9IipD/TIqQ/06Kkv9QipL/UoqS/1SKlP9WipT/WIqU/1qKlv9eipb/YIqW/2KKlv9kipj/ZoqY/2iKmP9qipr/bIqa/3CKmv9yipz/dIqc/3aKnP94ip7/eoqe/3yKnv9+iqD/goqg/4SKoP+GiqD/iIqi/4qKov+MiqL/joqk/5CKpP+UiqT/loqm/5iKpv+aiqb/nIqo/56KqP+giqj/ooqq/6aKqv+oiqr/qoqq/6yKrP+uiqz/sIqs/7KKrv+0iq7/uIqu/7qKsP+8irD/voqw/8CKsv/CirL/xIqy/8aKtP/KirT/zIq0/86KtP/Qirb/0oq2/9SKtv/Wirj/2Iq4/yiMiP8qjIj/LIyI/y6Miv8wjIr/MoyK/zSMjP82jIz/OoyM/zyMjP8+jI7/QIyO/0KMjv9EjJD/RoyQ/0iMkP9MjJL/ToyS/1CMkv9SjJT/VIyU/1aMlP9YjJb/WoyW/16Mlv9gjJb/YoyY/2SMmP9mjJj/aIya/2qMmv9sjJr/cIyc/3KMnP90jJz/doye/3iMnv96jJ7/fIyg/36MoP+CjKD/hIyg/4aMov+IjKL/ioyi/4yMpP+OjKT/kIyk/5SMpv+WjKb/mIym/5qMqP+cjKj/noyo/6CMqv+ijKr/poyq/6iMqv+qjKz/rIys/66MrP+wjK7/soyu/7SMrv+4jLD/uoyw/7yMsP++jLL/wIyy/8KMsv/EjLT/xoy0/8qMtP/MjLT/zoy2/9CMtv/SjLb/1Iy4/9aMuP/YjLj/KJCI/yqQiP8skIr/LpCK/zCQiv8ykIz/NJCM/zaQjP86kIz/PJCO/z6Qjv9AkI7/QpCQ/0SQkP9GkJD/SJCS/0yQkv9OkJL/UJCU/1KQlP9UkJT/VpCW/1iQlv9akJb/XpCW/2CQmP9ikJj/ZJCY/2aQmv9okJr/apCa/2yQnP9wkJz/cpCc/3SQnv92kJ7/eJCe/3qQoP98kKD/fpCg/4KQoP+EkKL/hpCi/4iQov+KkKT/jJCk/46QpP+QkKb/lJCm/5aQpv+YkKj/mpCo/5yQqP+ekKr/oJCq/6KQqv+mkKr/qJCs/6qQrP+skKz/rpCu/7CQrv+ykK7/tJCw/7iQsP+6kLD/vJCy/76Qsv/AkLL/wpC0/8SQtP/GkLT/ypC0/8yQtv/OkLb/0JC2/9KQuP/UkLj/1pC4/9iQuv8okoj/KpKK/yySiv8ukor/MJKM/zKSjP80koz/NpKM/zqSjv88ko7/PpKO/0CSkP9CkpD/RJKQ/0aSkv9IkpL/TJKS/06SlP9QkpT/UpKU/1SSlv9Wkpb/WJKW/1qSlv9ekpj/YJKY/2KSmP9kkpr/ZpKa/2iSmv9qkpz/bJKc/3CSnP9ykp7/dJKe/3aSnv94kqD/epKg/3ySoP9+kqD/gpKi/4SSov+GkqL/iJKk/4qSpP+MkqT/jpKm/5CSpv+Ukqb/lpKo/5iSqP+akqj/nJKq/56Sqv+gkqr/opKq/6aSrP+okqz/qpKs/6ySrv+ukq7/sJKu/7KSsP+0krD/uJKw/7qSsv+8krL/vpKy/8CStP/CkrT/xJK0/8aStP/Kkrb/zJK2/86Stv/Qkrj/0pK4/9SSuP/Wkrr/2JK6/yiWiv8qlor/LJaK/y6WjP8wloz/MpaM/zSWjP82lo7/OpaO/zyWjv8+lpD/QJaQ/0KWkP9ElpL/RpaS/0iWkv9MlpT/TpaU/1CWlP9Slpb/VJaW/1aWlv9Ylpb/WpaY/16WmP9glpj/Ypaa/2SWmv9mlpr/aJac/2qWnP9slpz/cJae/3KWnv90lp7/dpag/3iWoP96lqD/fJag/36Wov+ClqL/hJai/4aWpP+IlqT/ipak/4yWpv+Olqb/kJam/5SWqP+Wlqj/mJao/5qWqv+clqr/npaq/6CWqv+ilqz/ppas/6iWrP+qlq7/rJau/66Wrv+wlrD/spaw/7SWsP+4lrL/upay/7yWsv++lrT/wJa0/8KWtP/ElrT/xpa2/8qWtv/Mlrb/zpa4/9CWuP/Slrj/1Ja6/9aWuv/Ylrr/KJiK/yqYiv8smIz/LpiM/zCYjP8ymIz/NJiO/zaYjv86mI7/PJiQ/z6YkP9AmJD/QpiS/0SYkv9GmJL/SJiU/0yYlP9OmJT/UJiW/1KYlv9UmJb/VpiW/1iYmP9amJj/XpiY/2CYmv9imJr/ZJia/2aYnP9omJz/apic/2yYnv9wmJ7/cpie/3SYoP92mKD/eJig/3qYoP98mKL/fpii/4KYov+EmKT/hpik/4iYpP+KmKb/jJim/46Ypv+QmKj/lJio/5aYqP+YmKr/mpiq/5yYqv+emKr/oJis/6KYrP+mmKz/qJiu/6qYrv+smK7/rpiw/7CYsP+ymLD/tJiy/7iYsv+6mLL/vJi0/76YtP/AmLT/wpi0/8SYtv/GmLb/ypi2/8yYuP/OmLj/0Ji4/9KYuv/UmLr/1pi6/9iYvP8onIr/KpyM/yycjP8unIz/MJyM/zKcjv80nI7/NpyO/zqckP88nJD/PpyQ/0Cckv9CnJL/RJyS/0aclP9InJT/TJyU/06clv9QnJb/UpyW/1Sclv9WnJj/WJyY/1qcmP9enJr/YJya/2Kcmv9knJz/Zpyc/2icnP9qnJ7/bJye/3Ccnv9ynKD/dJyg/3acoP94nKD/epyi/3ycov9+nKL/gpyk/4ScpP+GnKT/iJym/4qcpv+MnKb/jpyo/5CcqP+UnKj/lpyq/5icqv+anKr/nJyq/56crP+gnKz/opys/6acrv+onK7/qpyu/6ycsP+unLD/sJyw/7Kcsv+0nLL/uJyy/7qctP+8nLT/vpy0/8CctP/CnLb/xJy2/8actv/KnLj/zJy4/86cuP/QnLr/0py6/9Scuv/WnLz/2Jy8/yigjP8qoIz/LKCM/y6gjP8woI7/MqCO/zSgjv82oJD/OqCQ/zygkP8+oJL/QKCS/0Kgkv9EoJT/RqCU/0iglP9MoJb/TqCW/1Cglv9SoJb/VKCY/1agmP9YoJj/WqCa/16gmv9goJr/YqCc/2SgnP9moJz/aKCe/2qgnv9soJ7/cKCg/3KgoP90oKD/dqCg/3igov96oKL/fKCi/36gpP+CoKT/hKCk/4agpv+IoKb/iqCm/4ygqP+OoKj/kKCo/5Sgqv+WoKr/mKCq/5qgqv+coKz/nqCs/6CgrP+ioK7/pqCu/6igrv+qoLD/rKCw/66gsP+woLL/sqCy/7Sgsv+4oLT/uqC0/7ygtP++oLT/wKC2/8Kgtv/EoLb/xqC4/8qguP/MoLj/zqC6/9Cguv/SoLr/1KC8/9agvP/YoLz/KKKM/yqijP8sooz/LqKO/zCijv8yoo7/NKKQ/zaikP86opD/PKKS/z6ikv9AopL/QqKU/0SilP9GopT/SKKW/0yilv9Oopb/UKKW/1KimP9Uopj/VqKY/1iimv9aopr/XqKa/2CinP9iopz/ZKKc/2ainv9oop7/aqKe/2yioP9woqD/cqKg/3SioP92oqL/eKKi/3qiov98oqT/fqKk/4KipP+Eoqb/hqKm/4iipv+Koqj/jKKo/46iqP+Qoqr/lKKq/5aiqv+Yoqr/mqKs/5yirP+eoqz/oKKu/6Kirv+moq7/qKKw/6qisP+sorD/rqKy/7Cisv+yorL/tKK0/7iitP+6orT/vKK0/76itv/Aorb/wqK2/8SiuP/Gorj/yqK4/8yiuv/Oorr/0KK6/9KivP/Uorz/1qK8/9iivv8opoz/KqaM/yymjv8upo7/MKaO/zKmkP80ppD/NqaQ/zqmkv88ppL/PqaS/0CmlP9CppT/RKaU/0amlv9Ippb/TKaW/06mlv9Qppj/UqaY/1SmmP9Wppr/WKaa/1qmmv9eppz/YKac/2KmnP9kpp7/Zqae/2imnv9qpqD/bKag/3CmoP9ypqD/dKai/3amov94pqL/eqak/3ympP9+pqT/gqam/4Smpv+Gpqb/iKao/4qmqP+Mpqj/jqaq/5Cmqv+Upqr/lqaq/5imrP+apqz/nKas/56mrv+gpq7/oqau/6amsP+oprD/qqaw/6ymsv+uprL/sKay/7KmtP+0prT/uKa0/7qmtP+8prb/vqa2/8Cmtv/Cprj/xKa4/8amuP/Kprr/zKa6/86muv/Qprz/0qa8/9SmvP/Wpr7/2Ka+/yiojP8qqI7/LKiO/y6ojv8wqJD/MqiQ/zSokP82qJL/OqiS/zyokv8+qJT/QKiU/0KolP9EqJb/RqiW/0iolv9MqJb/TqiY/1ComP9SqJj/VKia/1aomv9YqJr/Wqic/16onP9gqJz/Yqie/2Sonv9mqJ7/aKig/2qooP9sqKD/cKig/3Koov90qKL/dqii/3iopP96qKT/fKik/36opv+CqKb/hKim/4aoqP+IqKj/iqio/4yoqv+OqKr/kKiq/5Soqv+WqKz/mKis/5qorP+cqK7/nqiu/6Corv+iqLD/pqiw/6iosP+qqLL/rKiy/66osv+wqLT/sqi0/7SotP+4qLT/uqi2/7yotv++qLb/wKi4/8KouP/EqLj/xqi6/8qouv/MqLr/zqi8/9CovP/SqLz/1Ki+/9aovv/YqL7/KKyO/yqsjv8srI7/LqyQ/zCskP8yrJD/NKyS/zaskv86rJL/PKyU/z6slP9ArJT/QqyW/0Sslv9GrJb/SKyW/0ysmP9OrJj/UKyY/1Ksmv9UrJr/Vqya/1isnP9arJz/Xqyc/2Csnv9irJ7/ZKye/2asoP9orKD/aqyg/2ysoP9wrKL/cqyi/3Ssov92rKT/eKyk/3qspP98rKb/fqym/4Kspv+ErKj/hqyo/4isqP+KrKr/jKyq/46sqv+QrKr/lKys/5asrP+YrKz/mqyu/5ysrv+erK7/oKyw/6KssP+mrLD/qKyy/6qssv+srLL/rqy0/7CstP+yrLT/tKy0/7istv+6rLb/vKy2/76suP/ArLj/wqy4/8Ssuv/GrLr/yqy6/8ysvP/OrLz/0Ky8/9Ksvv/UrL7/1qy+/9isvv8oro7/Kq6O/yyukP8urpD/MK6Q/zKukv80rpL/Nq6S/zqulP88rpT/Pq6U/0Culv9Crpb/RK6W/0aulv9Irpj/TK6Y/06umP9Qrpr/Uq6a/1Sumv9Wrpz/WK6c/1qunP9erp7/YK6e/2Kunv9krqD/Zq6g/2iuoP9qrqD/bK6i/3Cuov9yrqL/dK6k/3aupP94rqT/eq6m/3yupv9+rqb/gq6o/4SuqP+Grqj/iK6q/4quqv+Mrqr/jq6q/5CurP+Urqz/lq6s/5iurv+arq7/nK6u/56usP+grrD/oq6w/6ausv+orrL/qq6y/6yutP+urrT/sK60/7KutP+0rrb/uK62/7qutv+8rrj/vq64/8CuuP/Crrr/xK66/8auuv/Krrz/zK68/86uvP/Qrr7/0q6+/9Suvv/Wrr7/2K7A/yiyjv8qspD/LLKQ/y6ykP8wspL/MrKS/zSykv82spT/OrKU/zyylP8+spb/QLKW/0Kylv9Espb/RrKY/0iymP9Mspj/TrKa/1Cymv9Sspr/VLKc/1aynP9Yspz/WrKe/16ynv9gsp7/YrKg/2SyoP9msqD/aLKg/2qyov9ssqL/cLKi/3KypP90sqT/drKk/3iypv96sqb/fLKm/36yqP+Csqj/hLKo/4ayqv+Isqr/irKq/4yyqv+Osqz/kLKs/5SyrP+Wsq7/mLKu/5qyrv+csrD/nrKw/6CysP+isrL/prKy/6iysv+qsrT/rLK0/66ytP+wsrT/srK2/7Sytv+4srb/urK4/7yyuP++srj/wLK6/8Kyuv/Esrr/xrK8/8qyvP/Msrz/zrK+/9Cyvv/Ssr7/1LK+/9aywP/YssD/KLSQ/yq0kP8stJD/LrSS/zC0kv8ytJL/NLSU/za0lP86tJT/PLSW/z60lv9AtJb/QrSW/0S0mP9GtJj/SLSY/0y0mv9OtJr/ULSa/1K0nP9UtJz/VrSc/1i0nv9atJ7/XrSe/2C0oP9itKD/ZLSg/2a0oP9otKL/arSi/2y0ov9wtKT/crSk/3S0pP92tKb/eLSm/3q0pv98tKj/frSo/4K0qP+EtKr/hrSq/4i0qv+KtKr/jLSs/460rP+QtKz/lLSu/5a0rv+YtK7/mrSw/5y0sP+etLD/oLSy/6K0sv+mtLL/qLS0/6q0tP+stLT/rrS0/7C0tv+ytLb/tLS2/7i0uP+6tLj/vLS4/760uv/AtLr/wrS6/8S0vP/GtLz/yrS8/8y0vv/OtL7/0LS+/9K0vv/UtMD/1rTA/9i0wP8ouJD/KriQ/yy4kv8uuJL/MLiS/zK4lP80uJT/NriU/zq4lv88uJb/PriW/0C4lv9CuJj/RLiY/0a4mP9IuJr/TLia/064mv9QuJz/Uric/1S4nP9WuJ7/WLie/1q4nv9euKD/YLig/2K4oP9kuKD/Zrii/2i4ov9quKL/bLik/3C4pP9yuKT/dLim/3a4pv94uKb/erio/3y4qP9+uKj/griq/4S4qv+GuKr/iLiq/4q4rP+MuKz/jris/5C4rv+UuK7/lriu/5i4sP+auLD/nLiw/564sv+guLL/oriy/6a4tP+ouLT/qri0/6y4tP+uuLb/sLi2/7K4tv+0uLj/uLi4/7q4uP+8uLr/vri6/8C4uv/CuLz/xLi8/8a4vP/KuL7/zLi+/864vv/QuL7/0rjA/9S4wP/WuMD/2LjC/yi8kP8qvJL/LLyS/y68kv8wvJT/MryU/zS8lP82vJb/OryW/zy8lv8+vJb/QLyY/0K8mP9EvJj/Rrya/0i8mv9MvJr/Tryc/1C8nP9SvJz/VLye/1a8nv9YvJ7/Wryg/168oP9gvKD/Yryg/2S8ov9mvKL/aLyi/2q8pP9svKT/cLyk/3K8pv90vKb/drym/3i8qP96vKj/fLyo/368qv+CvKr/hLyq/4a8qv+IvKz/irys/4y8rP+OvK7/kLyu/5S8rv+WvLD/mLyw/5q8sP+cvLL/nryy/6C8sv+ivLT/pry0/6i8tP+qvLT/rLy2/668tv+wvLb/sry4/7S8uP+4vLj/ury6/7y8uv++vLr/wLy8/8K8vP/EvLz/xry+/8q8vv/MvL7/zry+/9C8wP/SvMD/1LzA/9a8wv/YvML/KL6S/yq+kv8svpL/Lr6U/zC+lP8yvpT/NL6W/za+lv86vpb/PL6W/z6+mP9Avpj/Qr6Y/0S+mv9Gvpr/SL6a/0y+nP9Ovpz/UL6c/1K+nv9Uvp7/Vr6e/1i+oP9avqD/Xr6g/2C+oP9ivqL/ZL6i/2a+ov9ovqT/ar6k/2y+pP9wvqb/cr6m/3S+pv92vqj/eL6o/3q+qP98vqr/fr6q/4K+qv+Evqr/hr6s/4i+rP+Kvqz/jL6u/46+rv+Qvq7/lL6w/5a+sP+YvrD/mr6y/5y+sv+evrL/oL60/6K+tP+mvrT/qL60/6q+tv+svrb/rr62/7C+uP+yvrj/tL64/7i+uv+6vrr/vL66/76+vP/Avrz/wr68/8S+vv/Gvr7/yr6+/8y+vv/OvsD/0L7A/9K+wP/UvsL/1r7C/9i+wv8owpL/KsKS/yzClP8uwpT/MMKU/zLClv80wpb/NsKW/zrClv88wpj/PsKY/0DCmP9Cwpr/RMKa/0bCmv9Iwpz/TMKc/07CnP9Qwp7/UsKe/1TCnv9WwqD/WMKg/1rCoP9ewqD/YMKi/2LCov9kwqL/ZsKk/2jCpP9qwqT/bMKm/3DCpv9ywqb/dMKo/3bCqP94wqj/esKq/3zCqv9+wqr/gsKq/4TCrP+Gwqz/iMKs/4rCrv+Mwq7/jsKu/5DCsP+UwrD/lsKw/5jCsv+awrL/nMKy/57CtP+gwrT/osK0/6bCtP+owrb/qsK2/6zCtv+uwrj/sMK4/7LCuP+0wrr/uMK6/7rCuv+8wrz/vsK8/8DCvP/Cwr7/xMK+/8bCvv/Kwr7/zMLA/87CwP/QwsD/0sLC/9TCwv/WwsL/2MLE/yjEkv8qxJT/LMSU/y7ElP8wxJb/MsSW/zTElv82xJb/OsSY/zzEmP8+xJj/QMSa/0LEmv9ExJr/RsSc/0jEnP9MxJz/TsSe/1DEnv9SxJ7/VMSg/1bEoP9YxKD/WsSg/17Eov9gxKL/YsSi/2TEpP9mxKT/aMSk/2rEpv9sxKb/cMSm/3LEqP90xKj/dsSo/3jEqv96xKr/fMSq/37Eqv+CxKz/hMSs/4bErP+IxK7/isSu/4zErv+OxLD/kMSw/5TEsP+WxLL/mMSy/5rEsv+cxLT/nsS0/6DEtP+ixLT/psS2/6jEtv+qxLb/rMS4/67EuP+wxLj/ssS6/7TEuv+4xLr/usS8/7zEvP++xLz/wMS+/8LEvv/ExL7/xsS+/8rEwP/MxMD/zsTA/9DEwv/SxML/1MTC/9bExP/YxMT/KMiU/yrIlP8syJT/LsiW/zDIlv8yyJb/NMiW/zbImP86yJj/PMiY/z7Imv9AyJr/Qsia/0TInP9GyJz/SMic/0zInv9OyJ7/UMie/1LIoP9UyKD/Vsig/1jIoP9ayKL/Xsii/2DIov9iyKT/ZMik/2bIpP9oyKb/asim/2zIpv9wyKj/csio/3TIqP92yKr/eMiq/3rIqv98yKr/fsis/4LIrP+EyKz/hsiu/4jIrv+KyK7/jMiw/47IsP+QyLD/lMiy/5bIsv+YyLL/msi0/5zItP+eyLT/oMi0/6LItv+myLb/qMi2/6rIuP+syLj/rsi4/7DIuv+yyLr/tMi6/7jIvP+6yLz/vMi8/77Ivv/AyL7/wsi+/8TIvv/GyMD/ysjA/8zIwP/OyML/0MjC/9LIwv/UyMT/1sjE/9jIxP8oypT/KsqU/yzKlv8uypb/MMqW/zLKlv80ypj/NsqY/zrKmP88ypr/Psqa/0DKmv9Cypz/RMqc/0bKnP9Iyp7/TMqe/07Knv9QyqD/Usqg/1TKoP9WyqD/WMqi/1rKov9eyqL/YMqk/2LKpP9kyqT/Zsqm/2jKpv9qyqb/bMqo/3DKqP9yyqj/dMqq/3bKqv94yqr/esqq/3zKrP9+yqz/gsqs/4TKrv+Gyq7/iMqu/4rKsP+MyrD/jsqw/5DKsv+UyrL/lsqy/5jKtP+ayrT/nMq0/57KtP+gyrb/osq2/6bKtv+oyrj/qsq4/6zKuP+uyrr/sMq6/7LKuv+0yrz/uMq8/7rKvP+8yr7/vsq+/8DKvv/Cyr7/xMrA/8bKwP/KysD/zMrC/87Kwv/QysL/0srE/9TKxP/WysT/2MrG/yjOlP8qzpb/LM6W/y7Olv8wzpb/Ms6Y/zTOmP82zpj/Os6a/zzOmv8+zpr/QM6c/0LOnP9Ezpz/Rs6e/0jOnv9Mzp7/Ts6g/1DOoP9SzqD/VM6g/1bOov9YzqL/Ws6i/17OpP9gzqT/Ys6k/2TOpv9mzqb/aM6m/2rOqP9szqj/cM6o/3LOqv90zqr/ds6q/3jOqv96zqz/fM6s/37OrP+Czq7/hM6u/4bOrv+IzrD/is6w/4zOsP+OzrL/kM6y/5TOsv+WzrT/mM60/5rOtP+czrT/ns62/6DOtv+izrb/ps64/6jOuP+qzrj/rM66/67Ouv+wzrr/ss68/7TOvP+4zrz/us6+/7zOvv++zr7/wM6+/8LOwP/EzsD/xs7A/8rOwv/MzsL/zs7C/9DOxP/SzsT/1M7E/9bOxv/Yzsb/";
+
+function show(canvasId, imgData){
+  const cv=$(canvasId); cv.width=imgData.width; cv.height=imgData.height;
+  cv.getContext("2d").putImageData(imgData,0,0);
+}
+function b64ToImageData(b64){
+  const bin=atob(b64); const a=new Uint8ClampedArray(bin.length);
+  for(let i=0;i<bin.length;i++)a[i]=bin.charCodeAt(i);
+  return new ImageData(a,W,H);
+}
+function makeCover(){
+  const d=new Uint8ClampedArray(W*H*4);
+  for(let y=0;y<H;y++)for(let x=0;x<W;x++){
+    const i=(y*W+x)*4;
+    d[i]  =(40 + Math.floor(x*180/W)) & 0xFE;
+    d[i+1]=(60 + Math.floor(y*150/H)) & 0xFE;
+    d[i+2]=(120+ Math.floor((x+y)*80/(W+H))) & 0xFE;
+    d[i+3]=255;
+  }
+  return new ImageData(d,W,H);
+}
+function bitOf(data,k){ const p=Math.floor(k/3),ch=k%3,idx=p*4+ch; return data[idx]&1; }
+function embed(src,message){
+  const d=new Uint8ClampedArray(src.data);
+  const bytes=new TextEncoder().encode(message);
+  const bits=[];
+  for(let i=31;i>=0;i--)bits.push((bytes.length>>>i)&1);
+  for(const b of bytes)for(let i=7;i>=0;i--)bits.push((b>>i)&1);
+  const cap=W*H*3;
+  for(let k=0;k<bits.length&&k<cap;k++){ const p=Math.floor(k/3),ch=k%3,idx=p*4+ch; d[idx]=(d[idx]&0xFE)|bits[k]; }
+  return new ImageData(d,src.width,src.height);
+}
+function extract(img){
+  const d=img.data; let L=0;
+  for(let k=0;k<32;k++)L=(L<<1)|bitOf(d,k);
+  if(L<0||L>(W*H*3-32)/8) return null;
+  const bytes=new Uint8Array(L);
+  for(let i=0;i<L;i++){ let v=0; for(let j=0;j<8;j++)v=(v<<1)|bitOf(d,32+i*8+j); bytes[i]=v; }
+  try{ return new TextDecoder("utf-8",{fatal:false}).decode(bytes); }catch(e){ return null; }
+}
+function amplify(img){
+  const out=new Uint8ClampedArray(img.width*img.height*4);
+  for(let p=0;p<img.width*img.height;p++){
+    const i=p*4;
+    const on=((img.data[i]&1)|(img.data[i+1]&1)|(img.data[i+2]&1))?245:18;
+    out[i]=out[i+1]=out[i+2]=on; out[i+3]=255;
+  }
+  return new ImageData(out,img.width,img.height);
+}
+
+/* station 2 */
+let cover=makeCover(), stego=cover;
+show("cv-cover",cover); show("cv-stego",cover);
+$("hide").onclick=()=>{ stego=embed(cover,$("msg").value); show("cv-stego",stego); $("revout").textContent="(hidden — now reveal or amplify it)"; };
+$("reveal").onclick=()=>{ const t=extract(stego); $("revout").textContent=t&&t.length?t:"(nothing hidden yet — hide a message first)"; };
+/* station 3 */
+$("amp2").onclick=()=>{ show("cv-amp",amplify(stego)); };
+show("cv-amp",amplify(cover));
+
+/* station 4 */
+const chal=b64ToImageData(CHAL_B64);
+show("cv-chal",chal);
+$("ampchal").onclick=()=>{ show("cv-chalamp",amplify(chal)); };
+async function sha256(s){const b=await crypto.subtle.digest("SHA-256",new TextEncoder().encode(s));return [...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,"0")).join("");}
+const norm=s=>s.toLowerCase().replace(/[^a-z0-9]/g,"");
+$("extract").onclick=async()=>{
+  const t=extract(chal); $("exout").textContent=t&&t.length?t:"(no readable message found)";
+  const v=$("verdict");
+  if(t && (await sha256(norm(t)))===FLAG_HASH){
+    v.className="verdict ok"; v.textContent="✓ that’s the flag.";
+    $("seal").classList.add("show"); $("seal").scrollIntoView({behavior:"smooth",block:"center"});
+  } else { v.className="verdict"; v.textContent=""; }
+};
+
+/* scrollspy */
+(function(){const links=[...document.querySelectorAll('nav.path a')];const map={};links.forEach(a=>map[a.getAttribute('href').slice(1)]=a);
+  const obs=new IntersectionObserver(es=>{es.forEach(e=>{if(e.isIntersecting){links.forEach(l=>l.classList.remove('active'));map[e.target.id]&&map[e.target.id].classList.add('active');}});},{rootMargin:"-45% 0px -50% 0px"});
+  ["s1","s2","s3","s4"].forEach(id=>obs.observe($(id)));})();
+</script>
+</body>
+</html>
